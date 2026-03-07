@@ -45,7 +45,7 @@ function saveOutput(filename: string, content: string): void {
 async function main(): Promise<void> {
   console.log('🚀 Birthday Party Planner\n');
   console.log('👥 Audience: 👩‍👧‍👦 Parents');
-  console.log('📋 Problem: Plan kids' birthday parties with themes, activities, shopping lists, and timeline\n');
+  console.log(`📋 Problem: Plan kids' birthday parties with themes, activities, shopping lists, and timeline\n`);
 
   const spec = loadSpec();
   const squadDir = join(__dirname, '.squad');

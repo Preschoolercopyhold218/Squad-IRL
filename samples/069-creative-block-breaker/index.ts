@@ -45,7 +45,7 @@ function saveOutput(filename: string, content: string): void {
 async function main(): Promise<void> {
   console.log('🚀 Creative Block Breaker\n');
   console.log('👥 Audience: 🎨 Artists/Writers');
-  console.log('📋 Problem: Generate creative prompts and exercises to overcome artist's block\n');
+  console.log(`📋 Problem: Generate creative prompts and exercises to overcome artist's block\n`);
 
   const spec = loadSpec();
   const squadDir = join(__dirname, '.squad');
