@@ -20,10 +20,12 @@ The Travel Planning Squad has five specialists. They each own their domain, but 
 
 ```bash
 npm install
-npx squad build
+npm start
 ```
 
-Open this folder in GitHub Copilot (VS Code or CLI), then talk to them:
+The app will ask where you're going, how long, your budget, and your interests. Then it connects to your squad and gives you a complete travel plan.
+
+You can also open this folder in GitHub Copilot (VS Code or CLI) and talk to the agents directly:
 
 ```
 "Plan my 5-day trip to Guam, budget $3000, I love hiking and local food"
@@ -91,8 +93,7 @@ No prompt engineering, no fragile prompt injection. Just well-defined experts do
 
 ```bash
 npm install
-npx squad build
-# Open in Copilot
+npm start
 ```
 
-Then ask for a real trip. The squad will handle it.
+Tell the squad where you want to go. Ask follow-up questions. Get a real trip plan.
