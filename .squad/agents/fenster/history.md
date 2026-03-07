@@ -689,3 +689,29 @@ pm start works.
 **Pattern:** SquadClient initialization with runtime squad.config import, permission handler flow, sendAndWait for request/response pairing, extractContent for response parsing.
 **Key SDK APIs:** SquadClient({ apiKey }), session.on('message_delta'), extractContent() parser, onPermissionRequest handler.
 **Applies to:** All future samples with `npm start` — provides reusable blueprint.
+
+### email-inbox-triage SDK rebuild (2026-03-07)
+
+**Task:** Rebuild email-inbox-triage from hardcoded keyword-matching demo to interactive Squad SDK app.
+
+**Pattern applied:** Identical SquadClient pattern from travel-planner:
+- squad.config.ts with defineSquad/defineAgent/defineTeam/defineRouting/defineDefaults/defineCeremony
+- index.ts with SquadClient, readline input, sendAndWait, extractContent, stderr suppression, follow-up loop
+- package.json with @bradygaster/squad-sdk dep, npx tsx start script, ESM module type
+- tsconfig.json aligned to travel-planner (ESNext module, bundler resolution, skipLibCheck)
+
+**Agents defined:** Classifier (categorise + priority), Summarizer (concise summaries + entity extraction), Action Advisor (reply/archive/delete/flag/draft), Priority Ranker (urgency ordering + action grouping)
+
+**Key decisions:**
+- Four agents instead of three (original had Classifier, Summarizer, Action Suggester) — added Priority Ranker as a distinct agent for the ordering/grouping concern
+- Rich charters with structured output expectations (tables, bullet lists, action groups)
+- Interactive gather step asks for inbox description + optional context ("I'm a PM with a meeting in 1 hour")
+- No hardcoded email data — user provides everything
+
+**Files:** email-inbox-triage/squad.config.ts (new), email-inbox-triage/index.ts (replaced), email-inbox-triage/package.json (updated), email-inbox-triage/tsconfig.json (updated)
+**Verified:** npm install clean (0 vulnerabilities), tsc --noEmit passes (0 errors)
+
+## Learnings
+- The SDK rebuild pattern is now fully repeatable: read travel-planner, adapt squad.config.ts agents/routing, adapt index.ts gather function and banner, keep everything else identical
+- Adding a fourth agent (Priority Ranker) separate from Classifier gives cleaner separation of concerns — classification is per-email, ranking is across-all-emails
+- tsconfig bundler moduleResolution + skipLibCheck is the right combo for these SDK samples — avoids NodeNext resolution headaches with the SDK package exports
