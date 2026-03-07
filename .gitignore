@@ -11,3 +11,7 @@ coverage/
 .test-cli-*
 # Docs site generated files
 docs/dist/
+
+# Sample output directories
+samples/*/output/
+samples/*/package-lock.json
