@@ -50,6 +50,8 @@ interface Hotel {
   pricePerNight: number;
   rating: number;
   location: string;
+  area: string;
+  vibe: string;
   coord: Coord;
 }
 
@@ -62,6 +64,8 @@ interface Activity {
   closesAt: number;
   category: string;
   emoji: string;
+  area: string;
+  localTip: string;
   coord: Coord;
 }
 
@@ -84,6 +88,30 @@ interface BudgetLine {
   label: string;
   emoji: string;
   amount: number;
+}
+
+interface WeatherForecast {
+  day: number;
+  summary: string;
+  highC: number;
+  lowC: number;
+  chanceRain: number;
+  note: string;
+}
+
+interface RestaurantPick {
+  name: string;
+  area: string;
+  cuisine: string;
+  price: string;
+  note: string;
+}
+
+interface RestaurantSet {
+  breakfast: RestaurantPick;
+  lunch: RestaurantPick;
+  dinner: RestaurantPick;
+  snack: RestaurantPick;
 }
 
 // ── Data ────────────────────────────────────────────────────────────────────
@@ -115,33 +143,297 @@ const FLIGHTS: Flight[] = [
 ];
 
 const HOTELS: Hotel[] = [
-  { name: "Shinjuku Granbell", pricePerNight: 145, rating: 4.2, location: "Near Shinjuku station", coord: { lat: 35.6897, lon: 139.7005 } },
-  { name: "Hotel Gracery Shinjuku", pricePerNight: 165, rating: 4.4, location: "Near Kabukicho", coord: { lat: 35.6944, lon: 139.7013 } },
-  { name: "Shibuya Stream Excel", pricePerNight: 185, rating: 4.5, location: "Near Shibuya station", coord: { lat: 35.6585, lon: 139.7025 } },
-  { name: "Asakusa View Hotel", pricePerNight: 125, rating: 4.0, location: "Near Senso-ji", coord: { lat: 35.7126, lon: 139.7946 } },
-  { name: "Hilton Tokyo", pricePerNight: 220, rating: 4.3, location: "Shinjuku area", coord: { lat: 35.6932, lon: 139.6917 } },
-  { name: "Tokyu Stay Shinjuku", pricePerNight: 110, rating: 3.9, location: "Budget-friendly", coord: { lat: 35.6905, lon: 139.6978 } },
+  {
+    name: "Shinjuku Granbell",
+    pricePerNight: 145,
+    rating: 4.2,
+    location: "Kabukicho, 8 min walk to Shinjuku station",
+    area: "Shinjuku",
+    vibe: "Neon-lit nightlife, late-night eats, and easy JR access",
+    coord: { lat: 35.6897, lon: 139.7005 },
+  },
+  {
+    name: "Hotel Gracery Shinjuku",
+    pricePerNight: 165,
+    rating: 4.4,
+    location: "Kabukicho gateway with skyline views",
+    area: "Shinjuku",
+    vibe: "Big-city buzz with a short walk to commuter lines",
+    coord: { lat: 35.6944, lon: 139.7013 },
+  },
+  {
+    name: "Shibuya Stream Excel",
+    pricePerNight: 185,
+    rating: 4.5,
+    location: "Connected to Shibuya Station",
+    area: "Shibuya",
+    vibe: "Youthful, energetic, and walkable to shopping + nightlife",
+    coord: { lat: 35.6585, lon: 139.7025 },
+  },
+  {
+    name: "Asakusa View Hotel",
+    pricePerNight: 125,
+    rating: 4.0,
+    location: "Next to Senso-ji and Sumida River",
+    area: "Asakusa",
+    vibe: "Old Tokyo charm with temple streets and riverside strolls",
+    coord: { lat: 35.7126, lon: 139.7946 },
+  },
+  {
+    name: "Hilton Tokyo",
+    pricePerNight: 220,
+    rating: 4.3,
+    location: "Shinjuku skyscraper district",
+    area: "Shinjuku",
+    vibe: "Polished business hub with skyline views and quiet nights",
+    coord: { lat: 35.6932, lon: 139.6917 },
+  },
+  {
+    name: "Tokyu Stay Shinjuku",
+    pricePerNight: 110,
+    rating: 3.9,
+    location: "Shinjuku-sanchome, close to metro lines",
+    area: "Shinjuku",
+    vibe: "Compact, practical, and ideal for budget-minded explorers",
+    coord: { lat: 35.6905, lon: 139.6978 },
+  },
 ];
 
 const ACTIVITIES: Activity[] = [
-  { name: "Senso-ji Morning Visit", landmark: "Senso-ji Temple", costPP: 0, hours: 1.5, opensAt: 6, closesAt: 17, category: "culture", emoji: "⛩️", coord: { lat: 35.7148, lon: 139.7967 } },
-  { name: "Meiji Shrine Walk", landmark: "Meiji Shrine", costPP: 0, hours: 1.5, opensAt: 5, closesAt: 18, category: "culture", emoji: "⛩️", coord: { lat: 35.6764, lon: 139.6993 } },
-  { name: "Shibuya Crossing & Hachiko", landmark: "Shibuya Crossing", costPP: 0, hours: 1, opensAt: 0, closesAt: 24, category: "culture", emoji: "🚶", coord: { lat: 35.6595, lon: 139.7004 } },
-  { name: "Tsukiji Market Food Tour", landmark: "Tsukiji Outer Market", costPP: 35, hours: 2, opensAt: 5, closesAt: 14, category: "food", emoji: "🐟", coord: { lat: 35.6654, lon: 139.7707 } },
-  { name: "Tokyo Tower Observatory", landmark: "Tokyo Tower", costPP: 12, hours: 1.5, opensAt: 9, closesAt: 23, category: "culture", emoji: "🗼", coord: { lat: 35.6586, lon: 139.7454 } },
-  { name: "Akihabara Electronics Tour", landmark: "Akihabara", costPP: 20, hours: 2.5, opensAt: 10, closesAt: 21, category: "technology", emoji: "🎮", coord: { lat: 35.7023, lon: 139.7745 } },
-  { name: "teamLab Borderless", landmark: "teamLab Borderless", costPP: 25, hours: 2.5, opensAt: 10, closesAt: 19, category: "technology", emoji: "🎨", coord: { lat: 35.6267, lon: 139.7839 } },
-  { name: "Imperial Palace Gardens", landmark: "Imperial Palace", costPP: 0, hours: 1.5, opensAt: 9, closesAt: 17, category: "nature", emoji: "🏯", coord: { lat: 35.6852, lon: 139.7528 } },
-  { name: "Harajuku Shopping", landmark: "Harajuku/Takeshita St", costPP: 15, hours: 2, opensAt: 10, closesAt: 20, category: "culture", emoji: "🛍️", coord: { lat: 35.6702, lon: 139.7026 } },
-  { name: "Shinjuku Gyoen Garden", landmark: "Shinjuku Gyoen", costPP: 3, hours: 2, opensAt: 9, closesAt: 18, category: "nature", emoji: "🌸", coord: { lat: 35.6852, lon: 139.71 } },
-  { name: "Ueno Park & Museums", landmark: "Ueno Park", costPP: 10, hours: 2.5, opensAt: 9, closesAt: 17, category: "culture", emoji: "🌳", coord: { lat: 35.7146, lon: 139.7732 } },
-  { name: "Odaiba Waterfront", landmark: "Odaiba", costPP: 0, hours: 2, opensAt: 0, closesAt: 24, category: "nature", emoji: "🎡", coord: { lat: 35.6267, lon: 139.775 } },
-  { name: "Roppongi Art Night", landmark: "Roppongi Hills", costPP: 18, hours: 2, opensAt: 10, closesAt: 22, category: "culture", emoji: "🌃", coord: { lat: 35.6605, lon: 139.7292 } },
-  { name: "Nakameguro River Walk", landmark: "Nakameguro", costPP: 0, hours: 1.5, opensAt: 0, closesAt: 24, category: "nature", emoji: "🌿", coord: { lat: 35.6441, lon: 139.6988 } },
-  { name: "Tokyo Skytree Visit", landmark: "Tokyo Skytree", costPP: 18, hours: 1.5, opensAt: 9, closesAt: 22, category: "technology", emoji: "📡", coord: { lat: 35.7101, lon: 139.8107 } },
-  { name: "Robot Restaurant Show", landmark: "Shibuya Crossing", costPP: 55, hours: 1.5, opensAt: 16, closesAt: 23, category: "technology", emoji: "🤖", coord: { lat: 35.6932, lon: 139.7013 } },
-  { name: "Ramen Street Tasting", landmark: "Tokyo Tower", costPP: 12, hours: 1, opensAt: 11, closesAt: 22, category: "food", emoji: "🍜", coord: { lat: 35.6625, lon: 139.7553 } },
-  { name: "Mori Art Museum", landmark: "Roppongi Hills", costPP: 15, hours: 2, opensAt: 10, closesAt: 22, category: "culture", emoji: "🖼️", coord: { lat: 35.6605, lon: 139.7292 } },
+  {
+    name: "Senso-ji Morning Visit",
+    landmark: "Senso-ji Temple",
+    costPP: 0,
+    hours: 1.5,
+    opensAt: 6,
+    closesAt: 17,
+    category: "culture",
+    emoji: "⛩️",
+    area: "Asakusa",
+    localTip: "Arrive before 9 AM for quiet courtyards and lantern photos.",
+    coord: { lat: 35.7148, lon: 139.7967 },
+  },
+  {
+    name: "Meiji Shrine Forest Walk",
+    landmark: "Meiji Shrine",
+    costPP: 0,
+    hours: 1.5,
+    opensAt: 5,
+    closesAt: 18,
+    category: "culture",
+    emoji: "⛩️",
+    area: "Harajuku",
+    localTip: "Enter via the south torii for the most peaceful cedar path.",
+    coord: { lat: 35.6764, lon: 139.6993 },
+  },
+  {
+    name: "Shibuya Crossing & Hachiko",
+    landmark: "Shibuya Crossing",
+    costPP: 0,
+    hours: 1,
+    opensAt: 0,
+    closesAt: 24,
+    category: "culture",
+    emoji: "🚶",
+    area: "Shibuya",
+    localTip: "Catch the scramble from Shibuya Scramble Square just before sunset.",
+    coord: { lat: 35.6595, lon: 139.7004 },
+  },
+  {
+    name: "Tsukiji Market Breakfast Stroll",
+    landmark: "Tsukiji Outer Market",
+    costPP: 35,
+    hours: 2,
+    opensAt: 5,
+    closesAt: 14,
+    category: "food",
+    emoji: "🐟",
+    area: "Tsukiji",
+    localTip: "Go before 8:30 AM for the freshest tuna stalls and fewer queues.",
+    coord: { lat: 35.6654, lon: 139.7707 },
+  },
+  {
+    name: "Tokyo Tower Observatory",
+    landmark: "Tokyo Tower",
+    costPP: 12,
+    hours: 1.5,
+    opensAt: 9,
+    closesAt: 23,
+    category: "culture",
+    emoji: "🗼",
+    area: "Minato",
+    localTip: "The clearest skyline views are right after lunch before haze builds.",
+    coord: { lat: 35.6586, lon: 139.7454 },
+  },
+  {
+    name: "Akihabara Retro Game Hunt",
+    landmark: "Akihabara",
+    costPP: 20,
+    hours: 2.5,
+    opensAt: 10,
+    closesAt: 21,
+    category: "technology",
+    emoji: "🎮",
+    area: "Akihabara",
+    localTip: "Radio Kaikan upper floors hide the best vintage consoles.",
+    coord: { lat: 35.7023, lon: 139.7745 },
+  },
+  {
+    name: "teamLab Borderless (Azabudai)",
+    landmark: "teamLab Borderless",
+    costPP: 25,
+    hours: 2.5,
+    opensAt: 10,
+    closesAt: 19,
+    category: "technology",
+    emoji: "🎨",
+    area: "Roppongi",
+    localTip: "Book the first slot to get the most immersive rooms to yourselves.",
+    coord: { lat: 35.6649, lon: 139.7397 },
+  },
+  {
+    name: "Imperial Palace East Gardens",
+    landmark: "Imperial Palace",
+    costPP: 0,
+    hours: 1.5,
+    opensAt: 9,
+    closesAt: 17,
+    category: "nature",
+    emoji: "🏯",
+    area: "Marunouchi",
+    localTip: "Check closure days in advance; mornings are coolest and quietest.",
+    coord: { lat: 35.6852, lon: 139.7528 },
+  },
+  {
+    name: "Harajuku Takeshita & Cat Street",
+    landmark: "Harajuku/Takeshita St",
+    costPP: 15,
+    hours: 2,
+    opensAt: 10,
+    closesAt: 20,
+    category: "culture",
+    emoji: "🛍️",
+    area: "Harajuku",
+    localTip: "Visit before noon to beat the school crowd and long crepe lines.",
+    coord: { lat: 35.6702, lon: 139.7026 },
+  },
+  {
+    name: "Shinjuku Gyoen Garden",
+    landmark: "Shinjuku Gyoen",
+    costPP: 3,
+    hours: 2,
+    opensAt: 9,
+    closesAt: 18,
+    category: "nature",
+    emoji: "🌸",
+    area: "Shinjuku",
+    localTip: "Grab tickets at the west gate; it moves faster mid-morning.",
+    coord: { lat: 35.6852, lon: 139.71 },
+  },
+  {
+    name: "Ueno Park & National Museum",
+    landmark: "Ueno Park",
+    costPP: 10,
+    hours: 2.5,
+    opensAt: 9,
+    closesAt: 17,
+    category: "culture",
+    emoji: "🌳",
+    area: "Ueno",
+    localTip: "Line up by 9:15 AM if you want the museum galleries first.",
+    coord: { lat: 35.7146, lon: 139.7732 },
+  },
+  {
+    name: "Odaiba Seaside + Gundam",
+    landmark: "Odaiba",
+    costPP: 0,
+    hours: 2,
+    opensAt: 0,
+    closesAt: 24,
+    category: "nature",
+    emoji: "🎡",
+    area: "Odaiba",
+    localTip: "Sunset from Decks Tokyo Beach is unbeatable on clear days.",
+    coord: { lat: 35.6267, lon: 139.775 },
+  },
+  {
+    name: "Roppongi Hills Observatory",
+    landmark: "Roppongi Hills",
+    costPP: 18,
+    hours: 2,
+    opensAt: 10,
+    closesAt: 22,
+    category: "culture",
+    emoji: "🌃",
+    area: "Roppongi",
+    localTip: "The city lights pop after 7 PM, so aim for a twilight visit.",
+    coord: { lat: 35.6605, lon: 139.7292 },
+  },
+  {
+    name: "Nakameguro Canal Stroll",
+    landmark: "Nakameguro",
+    costPP: 0,
+    hours: 1.5,
+    opensAt: 0,
+    closesAt: 24,
+    category: "nature",
+    emoji: "🌿",
+    area: "Nakameguro",
+    localTip: "Grab a coffee to-go and walk south for the best photo angles.",
+    coord: { lat: 35.6441, lon: 139.6988 },
+  },
+  {
+    name: "Tokyo Skytree Visit",
+    landmark: "Tokyo Skytree",
+    costPP: 18,
+    hours: 1.5,
+    opensAt: 9,
+    closesAt: 22,
+    category: "technology",
+    emoji: "📡",
+    area: "Sumida",
+    localTip: "Reserve a timed ticket for golden hour if weather is clear.",
+    coord: { lat: 35.7101, lon: 139.8107 },
+  },
+  {
+    name: "Golden Gai Evening Walk",
+    landmark: "Shinjuku",
+    costPP: 10,
+    hours: 1.5,
+    opensAt: 18,
+    closesAt: 24,
+    category: "culture",
+    emoji: "🍸",
+    area: "Shinjuku",
+    localTip: "Stick to bars with posted cover charges; cash is easiest.",
+    coord: { lat: 35.6942, lon: 139.7032 },
+  },
+  {
+    name: "Tokyo Ramen Street Tasting",
+    landmark: "Tokyo Station",
+    costPP: 12,
+    hours: 1,
+    opensAt: 11,
+    closesAt: 22,
+    category: "food",
+    emoji: "🍜",
+    area: "Marunouchi",
+    localTip: "Lines move fastest after 2 PM when office crowds thin out.",
+    coord: { lat: 35.6814, lon: 139.7671 },
+  },
+  {
+    name: "Ginza Art + Food Hall Stop",
+    landmark: "Ginza",
+    costPP: 8,
+    hours: 1.5,
+    opensAt: 10,
+    closesAt: 21,
+    category: "culture",
+    emoji: "🖼️",
+    area: "Ginza",
+    localTip: "Department store basements discount bento boxes after 7 PM.",
+    coord: { lat: 35.6717, lon: 139.765 },
+  },
 ];
 
 const TRIP = {
@@ -154,6 +446,179 @@ const TRIP = {
   mealCostPPPerDay: 60,
   transportCostPPPerDay: 15,
 };
+
+const WHY_TOKYO = [
+  "Old temples and neon skylines share the same train line.",
+  "Tokyo's rail system makes neighborhood-hopping effortless.",
+  "Food culture runs deep — from 6-seat ramen shops to market stalls.",
+  "Safe, walkable streets make late evenings feel easy and inviting.",
+];
+
+const WEATHER_FORECAST: WeatherForecast[] = [
+  { day: 1, summary: "Clear skies, crisp morning", highC: 19, lowC: 11, chanceRain: 10, note: "Light jacket after sunset." },
+  { day: 2, summary: "Sun + thin clouds", highC: 21, lowC: 13, chanceRain: 15, note: "Great day for skyline views." },
+  { day: 3, summary: "Breezy with scattered clouds", highC: 18, lowC: 12, chanceRain: 20, note: "Comfortable walking weather." },
+  { day: 4, summary: "Mostly sunny", highC: 22, lowC: 14, chanceRain: 10, note: "Bring sunglasses and light layers." },
+  { day: 5, summary: "Morning drizzle, clearing later", highC: 17, lowC: 10, chanceRain: 45, note: "Pack a compact umbrella." },
+];
+
+const NEIGHBORHOOD_VIBES: Record<string, string> = {
+  Asakusa: "Old-town lanes, incense smoke, and river breezes.",
+  Shibuya: "Fast-paced, neon-lit, and full of late-night eats.",
+  Shinjuku: "Skyscrapers by day, lantern alleys by night.",
+  Harajuku: "Street fashion, youth culture, and tucked-away cafés.",
+  Roppongi: "Art towers, rooftop views, and international flair.",
+  Odaiba: "Waterfront promenades with wide-open skyline views.",
+  Ueno: "Parkland, museums, and classic Tokyo neighborhood energy.",
+  Akihabara: "Retro arcades, electronics, and anime storefronts.",
+  Marunouchi: "Polished business district with historic palace grounds.",
+  Tsukiji: "Seafood stalls, knives, and market energy.",
+  Ginza: "Luxury storefronts, galleries, and food halls.",
+  Sumida: "Riverside walks and Skytree panoramas.",
+  Minato: "Tokyo Tower glow with a mix of embassy district calm.",
+  Nakameguro: "Canal-side strolls and boutique coffee spots.",
+};
+
+const RESTAURANT_SETS: Record<string, RestaurantSet> = {
+  Asakusa: {
+    breakfast: { name: "Onigiri Asakusa Yadoroku", area: "Asakusa", cuisine: "Onigiri", price: "$", note: "Oldest onigiri shop in Tokyo." },
+    lunch: { name: "Daikokuya Tempura", area: "Asakusa", cuisine: "Tempura", price: "$$", note: "Classic tempura bowls — expect a queue." },
+    dinner: { name: "Asakusa Imahan", area: "Asakusa", cuisine: "Sukiyaki", price: "$$$", note: "Special-occasion wagyu in a historic dining room." },
+    snack: { name: "Kagetsudo Melon Pan", area: "Asakusa", cuisine: "Bakery", price: "$", note: "Warm melon pan near Nakamise Street." },
+  },
+  Shibuya: {
+    breakfast: { name: "Streamer Coffee Company", area: "Shibuya", cuisine: "Coffee", price: "$", note: "Latte art + quick pastries." },
+    lunch: { name: "Uobei Shibuya Dogenzaka", area: "Shibuya", cuisine: "Conveyor sushi", price: "$", note: "Fast, fun, and surprisingly good." },
+    dinner: { name: "Izakaya Uoshin", area: "Shibuya", cuisine: "Izakaya", price: "$$", note: "Lively seafood izakaya with seasonal plates." },
+    snack: { name: "Miyashita Park Food Hall", area: "Shibuya", cuisine: "Street bites", price: "$", note: "Grab-and-go bites on the rooftop." },
+  },
+  Shinjuku: {
+    breakfast: { name: "Tsujihan Shinjuku", area: "Shinjuku", cuisine: "Kaisendon", price: "$$", note: "Seafood rice bowls with quick service." },
+    lunch: { name: "Menya Musashi", area: "Shinjuku", cuisine: "Ramen", price: "$", note: "Thick broth and bold flavors." },
+    dinner: { name: "Omoide Yokocho Yakitori", area: "Shinjuku", cuisine: "Yakitori", price: "$$", note: "Tiny grill stalls under lanterns." },
+    snack: { name: "Shinjuku Takano", area: "Shinjuku", cuisine: "Fruit parfait", price: "$$", note: "Iconic fruit salon for a sweet break." },
+  },
+  Roppongi: {
+    breakfast: { name: "Blue Bottle Roppongi", area: "Roppongi", cuisine: "Coffee", price: "$", note: "Minimalist café with strong pour-overs." },
+    lunch: { name: "Gonpachi Nishi-Azabu", area: "Roppongi", cuisine: "Soba + grill", price: "$$", note: "Classic Tokyo izakaya set lunches." },
+    dinner: { name: "Butagumi", area: "Roppongi", cuisine: "Tonkatsu", price: "$$", note: "Deep-fried pork cutlets with serious crunch." },
+    snack: { name: "National Art Center Café", area: "Roppongi", cuisine: "Dessert", price: "$$", note: "Coffee break amid art exhibits." },
+  },
+  Odaiba: {
+    breakfast: { name: "Bills Odaiba", area: "Odaiba", cuisine: "Brunch", price: "$$", note: "Famous ricotta pancakes and bay views." },
+    lunch: { name: "Aqua City Ramen Street", area: "Odaiba", cuisine: "Ramen", price: "$", note: "Multiple ramen shops under one roof." },
+    dinner: { name: "Kua Aina Odaiba", area: "Odaiba", cuisine: "Burger", price: "$$", note: "Hawaiian-style burgers after sunset." },
+    snack: { name: "Decks Tokyo Beach Popcorn", area: "Odaiba", cuisine: "Snack", price: "$", note: "Grab a quick bite on the promenade." },
+  },
+  Ueno: {
+    breakfast: { name: "Park Side Café", area: "Ueno", cuisine: "Coffee", price: "$", note: "Quick espresso near the park entrance." },
+    lunch: { name: "Inshotei", area: "Ueno", cuisine: "Kaiseki", price: "$$$", note: "Traditional dining inside the park." },
+    dinner: { name: "Yamabe Okachimachi", area: "Ueno", cuisine: "Tonkatsu", price: "$$", note: "Local favorite for crispy cutlets." },
+    snack: { name: "Ameyoko Street Snacks", area: "Ueno", cuisine: "Street food", price: "$", note: "Roasted chestnuts + skewers." },
+  },
+  Akihabara: {
+    breakfast: { name: "Akihabara UDX Café", area: "Akihabara", cuisine: "Coffee", price: "$", note: "Easy meet-up spot near the station." },
+    lunch: { name: "Kanda Yabu Soba", area: "Akihabara", cuisine: "Soba", price: "$$", note: "Historic soba house close by." },
+    dinner: { name: "Gyukatsu Ichi Ni San", area: "Akihabara", cuisine: "Gyukatsu", price: "$$", note: "Sear-your-own beef cutlets." },
+    snack: { name: "Gachapon Kaikan", area: "Akihabara", cuisine: "Capsule toys", price: "$", note: "Snack on street food while hunting gachapon." },
+  },
+  Marunouchi: {
+    breakfast: { name: "Sarabeth's Tokyo", area: "Marunouchi", cuisine: "Brunch", price: "$$", note: "Soft omelets and French toast." },
+    lunch: { name: "Tokyo Ramen Street", area: "Marunouchi", cuisine: "Ramen", price: "$", note: "Choose from eight top ramen shops." },
+    dinner: { name: "Yakitori Imai", area: "Marunouchi", cuisine: "Yakitori", price: "$$$", note: "Refined skewers near the station." },
+    snack: { name: "Tokyo Station Bento Hall", area: "Marunouchi", cuisine: "Ekiben", price: "$", note: "Grab a bento for the Shinkansen vibe." },
+  },
+  Tsukiji: {
+    breakfast: { name: "Tsukiji Itadori", area: "Tsukiji", cuisine: "Seafood", price: "$$", note: "Classic kaisen bowls." },
+    lunch: { name: "Unitora Nakadori", area: "Tsukiji", cuisine: "Uni bowls", price: "$$$", note: "Premium uni and toro." },
+    dinner: { name: "Sushi Zanmai Honten", area: "Tsukiji", cuisine: "Sushi", price: "$$", note: "Late-night sushi staple." },
+    snack: { name: "Hamarikyu Daiwa Sushi", area: "Tsukiji", cuisine: "Street snack", price: "$", note: "Quick hand rolls on the go." },
+  },
+  Ginza: {
+    breakfast: { name: "Ginza Kimuraya", area: "Ginza", cuisine: "Bakery", price: "$", note: "Red bean buns with coffee." },
+    lunch: { name: "Ginza Kagari", area: "Ginza", cuisine: "Chicken ramen", price: "$$", note: "Silky, rich broth in a small space." },
+    dinner: { name: "Ginza Lion Beer Hall", area: "Ginza", cuisine: "German-Japanese", price: "$$", note: "Historic beer hall with classic plates." },
+    snack: { name: "Ginza Six Food Hall", area: "Ginza", cuisine: "Dessert", price: "$$", note: "Pick up artisanal sweets." },
+  },
+  Sumida: {
+    breakfast: { name: "Skytree Solamachi Café", area: "Sumida", cuisine: "Coffee", price: "$", note: "Quick breakfast with tower views." },
+    lunch: { name: "Tenku Limon", area: "Sumida", cuisine: "Tonkatsu", price: "$$", note: "Local tonkatsu with a crisp finish." },
+    dinner: { name: "Kokyo", area: "Sumida", cuisine: "Soba", price: "$$", note: "Quiet soba shop after Skytree." },
+    snack: { name: "Asakusa Kagetsudo", area: "Sumida", cuisine: "Melon pan", price: "$", note: "Sweet snack for the riverside walk." },
+  },
+  Harajuku: {
+    breakfast: { name: "Eggs 'n Things Harajuku", area: "Harajuku", cuisine: "Pancakes", price: "$$", note: "Fluffy pancakes to start the day." },
+    lunch: { name: "Afuri Harajuku", area: "Harajuku", cuisine: "Yuzu ramen", price: "$", note: "Light, citrusy ramen." },
+    dinner: { name: "Maisen Aoyama", area: "Harajuku", cuisine: "Tonkatsu", price: "$$", note: "Juicy cutlets in a quiet neighborhood." },
+    snack: { name: "Totti Candy Factory", area: "Harajuku", cuisine: "Cotton candy", price: "$", note: "Colorful sugar clouds for the photo op." },
+  },
+};
+
+const DEFAULT_RESTAURANT_SET: RestaurantSet = {
+  breakfast: { name: "Local bakery stop", area: "Tokyo", cuisine: "Bakery", price: "$", note: "Grab a pastry and coffee near the station." },
+  lunch: { name: "Depachika food hall", area: "Tokyo", cuisine: "Food hall", price: "$", note: "Mix-and-match bento boxes and snacks." },
+  dinner: { name: "Neighborhood izakaya", area: "Tokyo", cuisine: "Izakaya", price: "$$", note: "Order a few shared plates and call it a night." },
+  snack: { name: "Konbini run", area: "Tokyo", cuisine: "Convenience store", price: "$", note: "Onigiri, bottled tea, and seasonal treats." },
+};
+
+const TRANSIT_HINTS: Record<string, string> = {
+  "Shinjuku->Shibuya": "JR Yamanote Line (~7 min)",
+  "Shibuya->Harajuku": "JR Yamanote Line (~3 min)",
+  "Shibuya->Asakusa": "Tokyo Metro Ginza Line (~35 min)",
+  "Shinjuku->Asakusa": "Toei Shinjuku Line + Asakusa Line (~35 min)",
+  "Shibuya->Roppongi": "Tokyo Metro Hanzomon + Oedo Line (~18 min)",
+  "Roppongi->Ginza": "Tokyo Metro Hibiya Line (~10 min)",
+  "Ginza->Tsukiji": "Tokyo Metro Hibiya Line (~3 min)",
+  "Tsukiji->Ueno": "Hibiya Line to Ueno (~18 min)",
+  "Ueno->Akihabara": "JR Yamanote Line (~4 min)",
+  "Shinjuku->Nakameguro": "JR Yamanote + Tokyu Toyoko Line (~15 min)",
+  "Odaiba->Shimbashi": "Yurikamome Line (~15 min)",
+  "Marunouchi->Asakusa": "Tokyo Metro Ginza Line (~20 min)",
+  "Asakusa->Sumida": "Walk or Tobu Skytree Line (~3 min)",
+  "Roppongi->Odaiba": "Oedo Line + Yurikamome (~20 min)",
+};
+
+const AREA_THEMES: Record<string, string> = {
+  Asakusa: "Old Tokyo temples and riverside lanes",
+  Shibuya: "Big screens, fashion, and late-night energy",
+  Shinjuku: "Gardens by day, lantern alleys by night",
+  Harajuku: "Street fashion and leafy shrine walks",
+  Roppongi: "Art museums and skyline views",
+  Odaiba: "Bayfront promenades and futuristic builds",
+  Ueno: "Parks, museums, and classic neighborhoods",
+  Akihabara: "Retro games and electronics corridors",
+  Marunouchi: "Historic palace grounds and Tokyo Station",
+  Tsukiji: "Seafood markets and knife shops",
+  Ginza: "Gallery-hopping and designer storefronts",
+  Sumida: "Skytree panoramas and riverside calm",
+  Minato: "Tokyo Tower glow with embassy district vibes",
+  Nakameguro: "Canal strolls and boutique cafés",
+};
+
+const HIGHLIGHT_LINES: Record<string, string> = {
+  "Senso-ji Morning Visit": "Lantern-lit Senso-ji before the tour buses arrive.",
+  "Shibuya Crossing & Hachiko": "The scramble crossing at golden hour.",
+  "Tokyo Skytree Visit": "Skyline panoramas from Tokyo Skytree.",
+  "teamLab Borderless (Azabudai)": "Immersive digital art rooms at teamLab Borderless.",
+  "Odaiba Seaside + Gundam": "Sunset over Tokyo Bay with the Gundam statue.",
+  "Golden Gai Evening Walk": "Tiny bars and glowing lanterns in Golden Gai.",
+  "Tsukiji Market Breakfast Stroll": "Fresh sushi bites at Tsukiji's morning stalls.",
+};
+
+const PACKING_ESSENTIALS = [
+  "Comfortable walking shoes (you'll hit 15k+ steps most days).",
+  "IC card (Suica/PASMO) + small coin pouch.",
+  "Portable phone charger for navigation + photos.",
+  "Light jacket or cardigan for cool evenings.",
+];
+
+const USEFUL_PHRASES = [
+  { jp: "Sumimasen", en: "Excuse me / sorry" },
+  { jp: "Arigatou gozaimasu", en: "Thank you" },
+  { jp: "Eki wa doko desu ka?", en: "Where is the station?" },
+  { jp: "Kore wa ikura desu ka?", en: "How much is this?" },
+  { jp: "Koko de tabete ii desu ka?", en: "Can I eat here?" },
+];
 
 // ── Haversine ───────────────────────────────────────────────────────────────
 
@@ -225,6 +690,109 @@ function normalize(val: number, min: number, max: number): number {
   return ((val - min) / (max - min)) * 100;
 }
 
+function getWeather(day: number): WeatherForecast {
+  return WEATHER_FORECAST.find((w) => w.day === day) ?? WEATHER_FORECAST[0];
+}
+
+function dominantArea(activities: Activity[]): string {
+  const counts = new Map<string, number>();
+  for (const act of activities) {
+    counts.set(act.area, (counts.get(act.area) ?? 0) + 1);
+  }
+  let best = "Tokyo";
+  let bestCount = 0;
+  for (const [area, count] of counts.entries()) {
+    if (count > bestCount) {
+      best = area;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+function dayTheme(activities: Activity[]): string {
+  const area = dominantArea(activities);
+  return AREA_THEMES[area] ?? "A mix of neighborhoods with short transit hops";
+}
+
+function getRestaurantSet(area: string): RestaurantSet {
+  return RESTAURANT_SETS[area] ?? DEFAULT_RESTAURANT_SET;
+}
+
+function transitHint(fromArea: string, toArea: string, km: number): string {
+  if (fromArea === toArea) {
+    return `Walk between spots in ${toArea} (~${Math.max(5, Math.round(km * 12))} min)`;
+  }
+  if (km < 1.2) {
+    return `Walk ~${Math.max(8, Math.round(km * 12))} min to ${toArea}`;
+  }
+  const key = `${fromArea}->${toArea}`;
+  const reverse = `${toArea}->${fromArea}`;
+  const line = TRANSIT_HINTS[key] ?? TRANSIT_HINTS[reverse];
+  if (line) {
+    return `Take ${line} from ${fromArea} to ${toArea}`;
+  }
+  return `Take Tokyo Metro from ${fromArea} to ${toArea} (~${Math.round(travelMinutes(km))} min)`;
+}
+
+function splitByTime(activities: ScheduledActivity[]) {
+  const morning: ScheduledActivity[] = [];
+  const afternoon: ScheduledActivity[] = [];
+  const evening: ScheduledActivity[] = [];
+  for (const act of activities) {
+    if (act.startTime < 12) {
+      morning.push(act);
+    } else if (act.startTime < 17) {
+      afternoon.push(act);
+    } else {
+      evening.push(act);
+    }
+  }
+  return { morning, afternoon, evening };
+}
+
+function pickDontMiss(dayPlan: DayPlan): string {
+  for (const act of dayPlan.activities) {
+    const line = HIGHLIGHT_LINES[act.name];
+    if (line) return line;
+  }
+  const area = dominantArea(dayPlan.activities);
+  return `Take a slow evening stroll in ${area} and let the city settle in.`;
+}
+
+function collectHighlights(dayPlans: DayPlan[]): string[] {
+  const highlights: string[] = [];
+  const seen = new Set<string>();
+  for (const plan of dayPlans) {
+    for (const act of plan.activities) {
+      const line = HIGHLIGHT_LINES[act.name];
+      if (line && !seen.has(line)) {
+        highlights.push(line);
+        seen.add(line);
+      }
+    }
+  }
+  if (highlights.length < 5) {
+    highlights.push("Nighttime neighborhood wander with glowing lantern streets.");
+  }
+  return highlights.slice(0, 5);
+}
+
+function buildPackingSuggestions(): string[] {
+  const suggestions = new Set<string>([
+    "Comfortable walking shoes",
+    "IC card holder (Suica/PASMO)",
+    "Portable phone charger",
+  ]);
+  const minLow = Math.min(...WEATHER_FORECAST.map((w) => w.lowC));
+  const maxHigh = Math.max(...WEATHER_FORECAST.map((w) => w.highC));
+  const rainChance = Math.max(...WEATHER_FORECAST.map((w) => w.chanceRain));
+  if (minLow <= 11) suggestions.add("Light sweater or cardigan");
+  if (maxHigh >= 22) suggestions.add("Breathable layers");
+  if (rainChance >= 35) suggestions.add("Compact umbrella or packable rain shell");
+  return Array.from(suggestions);
+}
+
 // ── Agent 1: Flight Agent ───────────────────────────────────────────────────
 
 interface FlightResult {
@@ -238,6 +806,8 @@ async function flightAgent(): Promise<FlightResult> {
   await sleep(400);
   console.log(subHeader("Analyzing 5 flight options LAX → NRT (round-trip pricing)..."));
   await sleep(300);
+  console.log(clr(C.dim, "  I value fewer layovers and total travel time, then price as the tie-breaker."));
+  await sleep(200);
 
   const prices = FLIGHTS.map((f) => f.price);
   const durations = FLIGHTS.map((f) => f.durationMin);
@@ -253,6 +823,8 @@ async function flightAgent(): Promise<FlightResult> {
   });
 
   scored.sort((a, b) => b.score - a.score);
+  const cheapest = scored.reduce((best, cur) => (cur.flight.price < best.flight.price ? cur : best), scored[0]);
+  const fastest = scored.reduce((best, cur) => (cur.flight.durationMin < best.flight.durationMin ? cur : best), scored[0]);
 
   // Table header
   console.log("");
@@ -274,9 +846,39 @@ async function flightAgent(): Promise<FlightResult> {
   }
 
   const winner = scored[0];
+  const priceDelta = winner.flight.price - cheapest.flight.price;
+  const timeSavedVsCheapest = cheapest.flight.durationMin - winner.flight.durationMin;
+  const timeSaved = fastest.flight.durationMin - winner.flight.durationMin;
+  const layoverNote = winner.flight.stops === 0 ? "no layovers" : `${winner.flight.stops} layover(s)`;
   console.log(
     `\n  ${clr(C.green, "✓")} Selected: ${clr(C.bold + C.green, winner.flight.name)} — ${fmtUsd(winner.totalCost)} for 2 travelers (score ${winner.score})`
   );
+  console.log(
+    clr(
+      C.dim,
+      `  Why this pick: ${layoverNote}, ${fmtDuration(winner.flight.durationMin)} total travel, and strong value score.`
+    )
+  );
+  if (winner.flight.name !== cheapest.flight.name) {
+    const timePhrase =
+      timeSavedVsCheapest >= 0
+        ? `saves ${fmtDuration(timeSavedVsCheapest)} of travel time`
+        : `adds ${fmtDuration(Math.abs(timeSavedVsCheapest))} of travel time`;
+    console.log(
+      clr(
+        C.dim,
+        `  Trade-off: ${priceDelta >= 0 ? "+" : "-"}${fmtUsd(Math.abs(priceDelta))} per person vs cheapest, but ${timePhrase}.`
+      )
+    );
+  }
+  if (winner.flight.name !== fastest.flight.name && timeSaved > 0) {
+    console.log(
+      clr(
+        C.dim,
+        `  Trade-off: ${fmtUsd(winner.flight.price - fastest.flight.price)} per person for only ${fmtDuration(timeSaved)} longer than the fastest option.`
+      )
+    );
+  }
 
   return { flight: winner.flight, totalCost: winner.totalCost, score: winner.score };
 }
@@ -294,6 +896,8 @@ async function hotelAgent(budgetRemaining: number): Promise<HotelResult> {
   await sleep(400);
   console.log(subHeader(`Evaluating 6 hotels (budget remaining: ${fmtUsd(budgetRemaining)})...`));
   await sleep(300);
+  console.log(clr(C.dim, "  I balance neighborhood walkability with rating, then check the price tag."));
+  await sleep(200);
 
   // Top 5 attractions by popularity for proximity scoring
   const topAttractions: Coord[] = [
@@ -320,6 +924,8 @@ async function hotelAgent(budgetRemaining: number): Promise<HotelResult> {
   });
 
   scored.sort((a, b) => b.score - a.score);
+  const cheapest = scored.reduce((best, cur) => (cur.hotel.pricePerNight < best.hotel.pricePerNight ? cur : best), scored[0]);
+  const closest = scored.reduce((best, cur) => (cur.avgDist < best.avgDist ? cur : best), scored[0]);
 
   console.log("");
   console.log(
@@ -343,6 +949,27 @@ async function hotelAgent(budgetRemaining: number): Promise<HotelResult> {
   console.log(
     `\n  ${clr(C.green, "✓")} Selected: ${clr(C.bold + C.green, winner.hotel.name)} — ${fmtUsd(winner.totalCost)} for 5 nights (${winner.hotel.location})`
   );
+  console.log(clr(C.dim, `  Neighborhood vibe: ${winner.hotel.vibe}`));
+  if (winner.hotel.name !== cheapest.hotel.name) {
+    const priceDelta = winner.hotel.pricePerNight - cheapest.hotel.pricePerNight;
+    const distanceDelta = cheapest.avgDist - winner.avgDist;
+    const distancePhrase =
+      Math.abs(distanceDelta) < 0.2
+        ? "about the same distance"
+        : distanceDelta >= 0
+        ? `${distanceDelta.toFixed(1)} km closer`
+        : `${Math.abs(distanceDelta).toFixed(1)} km farther`;
+    console.log(
+      clr(
+        C.dim,
+        `  Trade-off: ${priceDelta >= 0 ? "+" : "-"}${fmtUsd(Math.abs(priceDelta))}/night vs cheapest, but ${distancePhrase} to top sights.`
+      )
+    );
+  }
+  if (winner.hotel.name !== closest.hotel.name) {
+    const priceDelta = winner.hotel.pricePerNight - closest.hotel.pricePerNight;
+    console.log(clr(C.dim, `  Trade-off: ${priceDelta >= 0 ? "+" : "-"}${fmtUsd(Math.abs(priceDelta))}/night vs the most central option.`));
+  }
 
   return { hotel: winner.hotel, totalCost: winner.totalCost, score: winner.score };
 }
@@ -428,6 +1055,8 @@ async function activityAgent(hotelCoord: Coord): Promise<DayPlan[]> {
   await sleep(400);
   console.log(subHeader("Clustering activities by geographic proximity..."));
   await sleep(300);
+  console.log(clr(C.dim, "  Goal: keep each day tight so you're not zig-zagging across the city."));
+  await sleep(200);
 
   const rawClusters = clusterActivities(ACTIVITIES, TRIP.days);
   const clusters = balanceClusters(rawClusters);
@@ -481,12 +1110,17 @@ async function activityAgent(hotelCoord: Coord): Promise<DayPlan[]> {
 
   // Print day summaries
   for (const dp of dayPlans) {
-    console.log(subHeader(`Day ${dp.day} (${dp.label}) — ${dp.activities.length} activities, ${dp.totalDistKm.toFixed(1)} km travel`));
+    const area = dominantArea(dp.activities);
+    console.log(subHeader(`Day ${dp.day} (${dp.label}) — ${AREA_THEMES[area] ?? "Mixed highlights"}`));
+    console.log(clr(C.dim, `    ${dp.activities.length} stops · ${dp.totalDistKm.toFixed(1)} km transit · ${NEIGHBORHOOD_VIBES[area] ?? "A varied Tokyo day."}`));
     for (const a of dp.activities) {
       const dist = a.travelKm > 0.01 ? clr(C.dim, ` (${a.travelKm.toFixed(1)} km, ${Math.round(a.travelMin)} min transit)`) : "";
       console.log(
         `    ${clr(C.cyan, fmtTime(a.startTime))} – ${clr(C.cyan, fmtTime(a.endTime))}  ${a.emoji} ${a.name}${dist}  ${clr(C.dim, a.costPP > 0 ? fmtUsd(a.costPP * 2) : "Free")}`
       );
+      if (a.localTip) {
+        console.log(clr(C.dim, `       Tip: ${a.localTip}`));
+      }
       await sleep(100);
     }
     console.log(clr(C.dim, `    Day cost: ${fmtUsd(dp.totalCost)}`));
@@ -517,6 +1151,7 @@ async function budgetAgent(
   const activityTotal = dayPlans.reduce((s, dp) => s + dp.totalCost, 0);
   const mealTotal = TRIP.mealCostPPPerDay * TRIP.travelers * TRIP.days;
   const transportTotal = TRIP.transportCostPPPerDay * TRIP.travelers * TRIP.days;
+  const hotelPerNight = hotelCost / TRIP.days;
 
   const lines: BudgetLine[] = [
     { label: "Flights", emoji: "✈️", amount: flightCost },
@@ -560,12 +1195,34 @@ async function budgetAgent(
       `\n  ${clr(C.red, "⚠  OVER BUDGET by " + fmtUsd(Math.abs(remaining)))}`
     );
     console.log(clr(C.yellow, "  Suggestions:"));
-    console.log(clr(C.yellow, "    • Switch to Tokyu Stay Shinjuku to save $" + ((HOTELS[0].pricePerNight - 110) * 5)));
-    console.log(clr(C.yellow, "    • Drop Robot Restaurant Show to save $110"));
+    console.log(
+      clr(
+        C.yellow,
+        "    • Switch to Tokyu Stay Shinjuku to save " + fmtUsd(Math.max(0, Math.round((hotelPerNight - 110) * TRIP.days)))
+      )
+    );
+    console.log(clr(C.yellow, "    • Skip teamLab Borderless to save $100 for two"));
   } else {
     console.log(
       `\n  ${clr(C.green, "✓")} ${clr(C.bold + C.green, "Under budget!")} ${fmtUsd(remaining)} remaining for souvenirs & extras`
     );
+    const hilton = HOTELS.find((h) => h.name === "Hilton Tokyo");
+    const hiltonUpgrade = hilton ? hilton.pricePerNight * TRIP.days - hotelCost : 0;
+    const upgrades = [
+      { label: "Upgrade hotel to Hilton Tokyo", cost: hiltonUpgrade, note: "Spa access + skyline views." },
+      { label: "Omakase dinner for two", cost: 260, note: "Intimate chef-led sushi experience." },
+      { label: "Tokyo DisneySea day tickets", cost: 180, note: "A full-day adventure in the bay." },
+      { label: "Private tea ceremony", cost: 140, note: "Quiet cultural reset in a historic room." },
+    ].filter((u) => u.cost > 0 && u.cost <= remaining);
+
+    if (upgrades.length > 0) {
+      console.log(clr(C.yellow, "  Splurge ideas with your remaining budget:"));
+      for (const u of upgrades.slice(0, 3)) {
+        console.log(clr(C.yellow, `    • ${u.label} (+${fmtUsd(u.cost)}) — ${u.note}`));
+      }
+    } else {
+      console.log(clr(C.yellow, "  Consider saving the rest for shopping, cafés, and last-minute finds."));
+    }
   }
 
   return { lines, total, remaining, isOver };
@@ -595,86 +1252,87 @@ async function itineraryAgent(
   console.log(clr(C.bold + C.magenta, `  └${cLine}┘`));
   await sleep(200);
 
+  console.log(subHeader("Weather outlook (simulated)"));
+  for (const w of WEATHER_FORECAST) {
+    console.log(
+      clr(
+        C.dim,
+        `  Day ${w.day} (${TRIP.dayLabels[w.day - 1]}): ${w.summary} · ${w.highC}°C/${w.lowC}°C · ${w.chanceRain}% rain · ${w.note}`
+      )
+    );
+  }
+
   for (const dp of dayPlans) {
+    const area = dominantArea(dp.activities);
+    const theme = dayTheme(dp.activities);
+    const vibe = NEIGHBORHOOD_VIBES[area] ?? "Tokyo charm in every direction.";
+    const weather = getWeather(dp.day);
+    const restaurants = getRestaurantSet(area);
+    const dontMiss = pickDontMiss(dp);
+    const { morning, afternoon, evening } = splitByTime(dp.activities);
+    let previousArea = hotel.area;
+
     console.log(
       `\n  ${clr(C.bold + C.blue, "━━━ Day " + dp.day + " — " + dp.label + " ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")}`
     );
+    console.log(clr(C.dim, `  Theme: ${theme}`));
+    console.log(clr(C.dim, `  Weather: ${weather.summary} · ${weather.highC}°C/${weather.lowC}°C · ${weather.chanceRain}% rain`));
+    console.log(clr(C.dim, `  Neighborhood vibe: ${vibe}`));
 
-    // Distance map line
-    const mapParts: string[] = [`  🏨 ${hotel.name.split(" ")[0]}`];
-    for (const a of dp.activities) {
-      mapParts.push(`──(${a.travelKm.toFixed(1)}km)──▶ ${a.emoji} ${a.name.split(" ")[0]}`);
-    }
-    // Print route map wrapping at ~70 chars
-    let mapLine = "";
-    for (const part of mapParts) {
-      if (mapLine.length + part.length > 68 && mapLine.length > 0) {
-        console.log(clr(C.dim, mapLine));
-        mapLine = "    ";
+    const printSection = (
+      label: string,
+      acts: ScheduledActivity[],
+      meal: RestaurantPick,
+      mealLabel: string,
+      snack?: RestaurantPick
+    ) => {
+      console.log(clr(C.bold + C.yellow, `  ${label}`));
+      if (acts.length === 0) {
+        console.log(clr(C.dim, "    Open time for wandering, cafés, or shopping."));
       }
-      mapLine += part;
-    }
-    if (mapLine.length > 0) console.log(clr(C.dim, mapLine));
-
-    console.log("");
-
-    // Build a timeline: merge activities with meal slots
-    const acts = dp.activities;
-
-    // Find best lunch slot — a gap between activities near 12-1 PM
-    let lunchSlot = -1;
-    for (let i = 0; i < acts.length; i++) {
-      const end = acts[i].endTime;
-      const nextStart = i + 1 < acts.length ? acts[i + 1].startTime : 20;
-      if (end >= 11.5 && end <= 14 && nextStart - end >= 0.15) {
-        lunchSlot = i;
-        break;
+      for (const a of acts) {
+        const costStr = a.costPP > 0 ? padL(fmtUsd(a.costPP * 2), 8) : padL("Free", 8);
+        const costColored = a.costPP > 0 ? costStr : clr(C.green, costStr);
+        console.log(
+          `    ${clr(C.cyan, fmtTime(a.startTime) + " – " + fmtTime(a.endTime))}  ${a.emoji} ${pad(a.name, 28)} ${costColored}`
+        );
+        console.log(clr(C.dim, `       Transit: ${transitHint(previousArea, a.area, a.travelKm)}`));
+        if (a.localTip) {
+          console.log(clr(C.dim, `       Local tip: ${a.localTip}`));
+        }
+        previousArea = a.area;
       }
-    }
-    if (lunchSlot === -1 && acts.length > 0) {
-      // Default: after first activity that ends past 11:30
-      for (let i = 0; i < acts.length; i++) {
-        if (acts[i].endTime >= 11.5) { lunchSlot = i; break; }
-      }
-    }
-
-    let dinnerPrinted = false;
-
-    for (let ai = 0; ai < acts.length; ai++) {
-      const a = acts[ai];
-      const costStr = a.costPP > 0 ? padL(fmtUsd(a.costPP * 2), 8) : padL("Free", 8);
-      const costColored = a.costPP > 0 ? costStr : clr(C.green, costStr);
       console.log(
-        `    ${clr(C.cyan, fmtTime(a.startTime) + " – " + fmtTime(a.endTime))}  ${a.emoji} ${pad(a.name, 28)} ${costColored}  ${clr(C.dim, a.travelKm.toFixed(1) + " km transit")}`
+        clr(
+          C.yellow,
+          `    ${mealLabel}: ${meal.name} (${meal.cuisine}, ${meal.price}) — ${meal.note}`
+        )
       );
-      await sleep(80);
-
-      if (ai === lunchSlot) {
-        const lunchStart = Math.max(12, a.endTime + 0.08);
+      if (snack) {
         console.log(
-          `    ${clr(C.yellow, fmtTime(lunchStart) + " – " + fmtTime(lunchStart + 1))}  🍜 Lunch break                         ${clr(C.dim, "~$30 for 2")}`
+          clr(
+            C.yellow,
+            `    Snack: ${snack.name} (${snack.cuisine}, ${snack.price}) — ${snack.note}`
+          )
         );
       }
+    };
 
-      if (!dinnerPrinted && a.endTime >= 17.5) {
-        console.log(
-          `    ${clr(C.yellow, fmtTime(19) + " – " + fmtTime(20.5))}  🍣 Dinner                              ${clr(C.dim, "~$50 for 2")}`
-        );
-        dinnerPrinted = true;
-      }
-    }
+    printSection("Morning", morning, restaurants.breakfast, "Breakfast");
+    printSection("Afternoon", afternoon, restaurants.lunch, "Lunch", restaurants.snack);
+    printSection("Evening", evening, restaurants.dinner, "Dinner");
 
-    if (lunchSlot === -1) {
-      console.log(`    ${clr(C.yellow, fmtTime(12.5) + " – " + fmtTime(13.5))}  🍜 Lunch break                         ${clr(C.dim, "~$30 for 2")}`);
-    }
-    if (!dinnerPrinted) {
-      console.log(`    ${clr(C.yellow, fmtTime(19) + " – " + fmtTime(20.5))}  🍣 Dinner                              ${clr(C.dim, "~$50 for 2")}`);
-    }
-
+    console.log(clr(C.yellow, `  Don't miss: ${dontMiss}`));
     console.log(
-      clr(C.dim, `    ─── Day total: ${fmtUsd(dp.totalCost)} activities + ~$90 meals + ~$30 transport = ${fmtUsd(dp.totalCost + 90 + 30)} ───`)
+      clr(C.dim, `  Day total: ${fmtUsd(dp.totalCost)} activities + ~$90 meals + ~$30 transit = ${fmtUsd(dp.totalCost + 120)}`)
     );
   }
+
+  console.log(subHeader("Trip highlights (top 5 moments)"));
+  const highlights = collectHighlights(dayPlans);
+  highlights.forEach((h, i) => {
+    console.log(clr(C.dim, `  ${i + 1}. ${h}`));
+  });
 
   // Final summary
   console.log(`\n${clr(C.bold + C.cyan, "  ╔" + "═".repeat(62) + "╗")}`);
@@ -707,6 +1365,17 @@ async function itineraryAgent(
     console.log(clr(C.dim, `    ${na} ↔ ${nb}: ${d.toFixed(2)} km`));
   }
 
+  console.log(subHeader("What to pack"));
+  const packList = new Set<string>([...PACKING_ESSENTIALS, ...buildPackingSuggestions()]);
+  for (const item of packList) {
+    console.log(clr(C.dim, `  • ${item}`));
+  }
+
+  console.log(subHeader("Useful phrases"));
+  for (const phrase of USEFUL_PHRASES) {
+    console.log(clr(C.dim, `  • ${phrase.jp} — ${phrase.en}`));
+  }
+
   console.log(
     `\n  ${clr(C.bold + C.green, "✅ Trip planning complete!")} ${TRIP.days} days in ${TRIP.destination}`
   );
@@ -727,6 +1396,11 @@ async function main(): Promise<void> {
   console.log(clr(C.bold + C.magenta, "  ║") + `  Budget:      ${clr(C.bold + C.green, "$4,000")}                                          ` + clr(C.bold + C.magenta, "║"));
   console.log(clr(C.bold + C.magenta, "  ║") + `  Interests:   Culture · Food · Technology · Nature               ` + clr(C.bold + C.magenta, "║"));
   console.log(clr(C.bold + C.magenta, "  ╚══════════════════════════════════════════════════════════════════╝"));
+
+  console.log(subHeader("Why Tokyo?"));
+  for (const reason of WHY_TOKYO) {
+    console.log(clr(C.dim, `  • ${reason}`));
+  }
 
   console.log(clr(C.dim, "\n  Initializing 5 planning agents...\n"));
   await sleep(600);

@@ -1,8 +1,9 @@
 # Travel Planner — Squad Multi-Agent Sample
 
 A self-contained TypeScript demo that plans a 5-day trip to Tokyo for 2 people
-on a $4,000 budget. Five specialised agents collaborate to produce an optimised
-itinerary in your terminal.
+on a $4,000 budget. Five specialised agents collaborate to produce a realistic,
+story-driven itinerary with weather, transit guidance, restaurant picks, and
+local tips in your terminal.
 
 ## Quick Start
 
@@ -20,11 +21,11 @@ pipeline.
 
 | # | Agent | Responsibility |
 |---|-------|---------------|
-| 1 | **Flight Agent** ✈️ | Scores every flight option on price, duration, and stops using weighted normalisation, then selects the best value. |
-| 2 | **Hotel Agent** 🏨 | Evaluates hotels on nightly rate, guest rating, and geographic proximity to the top 5 attractions (computed via Haversine distance). Picks the best option that fits the remaining budget. |
-| 3 | **Activity Agent** 🎌 | Clusters 15+ real Tokyo activities by geographic proximity so each day visits a tight neighbourhood. Respects opening hours and calculates inter-activity travel time from Haversine distances. |
-| 4 | **Budget Agent** 💰 | Aggregates all costs (flights, hotel, activities, meals, transport), visualises spend with bar charts, and suggests swaps if the plan exceeds the budget. |
-| 5 | **Itinerary Agent** 📋 | Assembles the final day-by-day schedule. Applies nearest-neighbour route optimisation within each day, inserts meal breaks, and renders a visual distance map between stops. |
+| 1 | **Flight Agent** ✈️ | Scores every flight option on price, duration, and stops, then explains the trade-offs behind the pick. |
+| 2 | **Hotel Agent** 🏨 | Evaluates hotels on nightly rate, guest rating, and proximity to top attractions (via Haversine distance), then describes the neighborhood vibe. |
+| 3 | **Activity Agent** 🎌 | Clusters real Tokyo activities by geographic proximity so each day stays in a tight neighborhood, with local tips for timing. |
+| 4 | **Budget Agent** 💰 | Aggregates all costs, visualises spend, and suggests splurge upgrades when you’re under budget. |
+| 5 | **Itinerary Agent** 📋 | Builds a morning/afternoon/evening plan with transit guidance, restaurants, weather, packing suggestions, and trip highlights. |
 
 ### Multi-Constraint Optimisation
 
@@ -48,6 +49,17 @@ The system satisfies four constraints simultaneously:
   option balances price against quality.
 - **ANSI colour output** with simulated agent delays for a realistic
   collaborative feel.
+- **Day-by-day narrative** with “Don’t miss” tips, neighborhood vibes, and
+  restaurant suggestions grounded in real Tokyo spots.
+- **Simulated weather forecast** plus packing suggestions and useful phrases.
+
+## Output Highlights
+
+- Morning/afternoon/evening breakdown for every day
+- Specific restaurant recommendations for each meal
+- Transit directions between neighborhoods
+- Daily weather forecast and packing suggestions
+- Trip highlights plus “Don’t miss” moments
 
 ## Project Structure
 

@@ -611,3 +611,4 @@ All four failing samples use `process.stdout.write()` or `process.exit()` but la
 - When samples use Node.js globals (`process`, `Buffer`, `__dirname`, etc.), they require both `@types/node` installed AND `"types": ["node"]` in tsconfig.json — just adding the package.json entry isn't sufficient
 - TypeScript's `types` compiler option must reference installed type definitions; the error "Cannot find type definition file for 'node'" means npm install hasn't run yet
 - travel-planner (the restored file) compiled successfully on first try — the git restore was clean
+- Travel demos feel more compelling when each agent narrates trade-offs and the itinerary includes weather, food, and local tips rather than just raw data
