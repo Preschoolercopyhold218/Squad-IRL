@@ -654,3 +654,33 @@ ode_modules/
 
 📌 Team update (2026-03-07T20:32:00Z): SDK-first sample pattern established — travel-planner rebuilt from 900-line standalone app to squad.config.ts demonstrating full @bradygaster/squad-sdk usage. Decision merged by Scribe.
 
+
+### travel-planner index.ts creation (2026-03-07T13:06:20Z)
+
+**Task:** Create runnable index.ts for travel-planner sample so 
+pm start works.
+
+**Problem:** Sample had squad.config.ts but no index.ts and no start script — couldn't run.
+
+**Solution:** Built interactive CLI using Squad SDK programmatic API:
+- SquadClient from @bradygaster/squad-sdk/client for connection management
+- SquadSession with streaming: true for real-time response streaming
+- Event-driven: listens for message_delta events, falls back to sendAndWait
+- System prompt built dynamically from the defineSquad() config (team, agents, routing rules)
+- eadline/promises for interactive user input gathering (destination, duration, budget, interests)
+- Conversation loop for follow-up questions
+- Graceful error handling with clear guidance if Copilot CLI isn't available
+
+**Key API surface used:**
+- SquadClient({ cwd, autoReconnect }) → connect() → createSession(config) → sendMessage(session, { prompt })
+- SquadSessionConfig.streaming: true + session.on('message_delta', handler) for streaming
+- SquadSessionEvent type from @bradygaster/squad-sdk/adapter (not re-exported from /client)
+- session.on('idle' | 'turn_end') to detect response completion
+
+**Files modified:** 	ravel-planner/index.ts (created), 	ravel-planner/package.json (start script + tsx dep), 	ravel-planner/tsconfig.json (include index.ts)
+
+**Learnings:**
+- SquadSessionEvent lives in adapter types, not client barrel — import from @bradygaster/squad-sdk/adapter
+- Session events use short names (message_delta, idle, 	urn_end) mapped internally to dotted SDK names
+- sendMessage is fire-and-forget (events deliver content); sendAndWait blocks for full response
+- defineSquad() config objects have .team, .agents, .routing etc. — useful for building system prompts dynamically
