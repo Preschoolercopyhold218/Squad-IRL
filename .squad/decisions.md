@@ -2034,3 +2034,63 @@ Rich inline charters (50-100 lines per agent) with:
 **Key imports:** SquadClient, SquadSession, SquadSessionConfig from @bradygaster/squad-sdk/client; SquadSessionEvent from @bradygaster/squad-sdk/adapter.
 **Why:** Users should get interactive CLI that connects to real squad backend, asks about their problem, and provides real advice. Separates config (squad.config.js) from runtime (index.ts).
 **Applies to:** All future samples needing interactive SDK-powered `npm start`.
+
+
+# Decision: Email Inbox Triage — Four-Agent Architecture
+
+**By:** Fenster (Core Dev)
+**Date:** 2026-03-07
+**Context:** Rebuilding email-inbox-triage as interactive Squad SDK app
+
+## Decision
+
+Email inbox triage uses four agents (not three):
+- **Classifier**: Per-email categorisation and priority assignment
+- **Summarizer**: Per-email concise summaries and entity extraction
+- **Action Advisor**: Per-email action recommendations and draft replies
+- **Priority Ranker**: Cross-email urgency ordering and action grouping
+
+## Rationale
+
+The original demo had three agents (Classifier, Summarizer, Action Suggester). Splitting the ranking/ordering concern into its own agent gives cleaner separation: classification is per-email (what IS this?), ranking is across-all-emails (what do I do FIRST?). This matches how real triage works — you classify individually, then step back and prioritise the whole batch.
+
+## Impact
+
+Future email-related samples should respect this four-agent pattern. The Priority Ranker agent is reusable for any batch-processing squad that needs cross-item ordering.
+
+
+# Decision: Gmail Playwright approach for email-inbox-triage
+
+**By:** Fenster (Core Dev)
+**Date:** 2025-07-18
+**Requested by:** Brady ("i would just make it a gmail demo")
+
+## What
+
+Replaced the paste-your-emails UX in `email-inbox-triage` with a Playwright-based Gmail scraper. `npm start` now launches a real Chromium browser, navigates to Gmail, waits for the user to log in, scrapes visible inbox rows, and feeds them to the triage squad.
+
+## Key choices
+
+1. **`playwright` (full package) over `playwright-core`** — includes browser management (`npx playwright install chromium`) so users don't need system Chromium
+2. **`launchPersistentContext` with `.gmail-session/`** — persists cookies/session between runs so the user only logs in once
+3. **Close browser after scraping** — keeps resources free during the (potentially long) triage conversation
+4. **Fallback scraping** — if Gmail's dynamic DOM changes and structured selectors (`tr.zA`, `.yW .zF`, `.bog`) fail, fall back to raw `innerText` of row elements
+5. **`squad.config.ts` untouched** — the four agents and routing rules already work perfectly for this use case
+
+## Impact
+
+- Users of this sample now get a real-world demo rather than a toy paste-input flow
+- Requires one extra setup step: `npx playwright install chromium`
+- `.gmail-session/` must be gitignored (handled)
+
+
+
+
+
+
+### 2026-03-07: User directive — Gmail demo for email triage (consolidated)
+**By:** Brady (via Copilot)
+**What:** Email inbox triage sample should demonstrate real-world input by connecting to Gmail using Playwright for browser automation. Initially scoped to generic "paste or connect" email input, then narrowed to **Gmail demo specifically** — scrape actual inbox data, feed to Squad triage agents.
+**Why:** User request for realistic demo. Samples should show Squad solving real human problems with real data, not toy inputs.
+**Evolution:** 22:25 — generic email connection directive → 22:27 — narrowed to Gmail focus
+**Implementation:** Fenster delivered with persistent Playwright session (one-time login), fallback selectors, read-only scraping

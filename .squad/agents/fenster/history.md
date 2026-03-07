@@ -747,3 +747,13 @@ pm start works.
 
 **Files:** email-inbox-triage/gmail-scraper.ts (new), email-inbox-triage/index.ts (rewritten), email-inbox-triage/package.json (playwright dep), email-inbox-triage/tsconfig.json (include gmail-scraper.ts), email-inbox-triage/.gitignore (new), email-inbox-triage/README.md (rewritten)
 **Verified:** npm install clean, tsc --noEmit passes (0 errors)
+
+
+### 📌 Team update (2026-03-07T22:36Z): email-inbox-triage rebuilt as Squad SDK app + Gmail Playwright integration — completed by Fenster
+
+- **Outcome:** email-inbox-triage sample now demonstrates interactive Squad SDK pattern with four-agent triage architecture (Classifier, Summarizer, Action Advisor, Priority Ranker)
+- **Gmail integration:** Playwright-based browser automation with persistent session, fallback selectors, read-only inbox scraping — real-world demo vs. toy paste-input
+- **Pattern:** SquadClient streaming CLI, squad.config.ts runtime import, progressive message_delta events
+- **Commits:** 927898d (SDK rebuild) + 225dd3c (Gmail scraping)
+- **Dependencies:** Added @bradygaster/squad-sdk and playwright
+- **Impact:** Validates interactive SDK pattern for samples portfolio; 8 remaining samples now prioritized for similar rebuilds

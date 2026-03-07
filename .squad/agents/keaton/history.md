@@ -706,3 +706,13 @@ This history accurately documents Keaton's work and decisions. Future spawns can
 - **Pattern learned:** Squad SDK's killer feature is **collaborative AI teams with quality gates** — not just "AI writes something," but "AI team iterates until it meets standards." This differentiates from single-shot LLM tools. Each sample demonstrates self-improving loops with domain expertise.
 - **File created:** `samples/MASTER-LIST.md` (100 entries, formatted as table with name/audience/problem/agents)
 - **Next step:** Individual sample implementations in `samples/{name}/` with charter.md and README.md
+
+
+### 📌 Team update (2026-03-07T22:36Z): Portfolio assessment complete — 8 YES samples approved for SDK rebuild pipeline — led by Keaton
+
+- **Scope:** Assessed all 18 remaining samples for real-world interactive potential and Squad SDK fit
+- **Results:** 8 YES (strong candidates), 2 MAYBE (conditional), 8 CUT (low priority or narrow use)
+- **YES candidates:** appointment-scheduler, bug-triage, contract-reviewer, inventory-manager, job-application-tracker, real-estate-analyzer, receipt-scanner, support-ticket-router
+- **Scoring criteria:** Real-world use case, interactive depth, agent collaboration, user value
+- **Impact on Fenster:** Clear prioritization for next batch of sample rebuilds using interactive SDK pattern
+- **Pattern established:** Like email-inbox-triage, samples should use SquadClient + squad.config.ts + four-agent workflows
