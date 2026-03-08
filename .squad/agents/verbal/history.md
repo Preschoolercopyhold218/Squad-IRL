@@ -71,3 +71,17 @@ Created `.squad/skills/history-hygiene/SKILL.md` to codify lesson from Kobayashi
 
 **Note:** v0.6.0 reference in history-hygiene entry is correct as-written — it documents the *Kobayashi incident* that taught the team the skill itself. No change needed.
 
+### LinkedIn Monitor Sample — Squad Config Design
+- Created `linkedin-monitor/squad.config.ts` with 4 agents: Notification Classifier, Engagement Scorer, Action Advisor, Summary Reporter
+- Followed gmail/squad.config.ts pattern exactly: same imports, section structure, defineSquad export shape
+- Key design choice: Action Advisor charter has a **CRITICAL** section mandating direct LinkedIn URLs with every recommendation — the UX is "see it, click it, act on it"
+- Engagement Scorer incorporates LinkedIn-specific dynamics: early-comment amplification, creator-to-creator weighting, decay rates on comment threads vs. connection requests
+- Summary Reporter uses fixed output template (📊 Daily Briefing) with counts, priority groups (🔴/🟡/🟢), and time estimates — scannable in 10 seconds
+- Classifier has explicit Squad-mention detection as a first-class field, not just a tag — product mentions surface regardless of notification type
+- Routing: 5 rules — 4 direct routes for individual agents, 1 full-tier catch-all for "triage|check|linkedin|monitor|everything" (priority 10)
+- Model: claude-sonnet-4.5 preferred, claude-haiku-4.5 fallback — consistent with gmail sample
+
+
+
+📌 Team update (2026-03-08T13:21:18Z): LinkedIn Monitor sample completed — full TypeScript implementation, four-agent squad.config.ts, URL-first action design pattern — decided by Fenster and Verbal
+

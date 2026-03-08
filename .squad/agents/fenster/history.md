@@ -766,3 +766,37 @@ pm start works.
 - **Integration pattern:** Extend squad.config.ts tools structure, existing SquadClient pattern proven in email-inbox-triage.
 - **Decision:** Ignore Playwright approach; go Gmail API.
 - **Next:** Awaiting Baer's security review before implementation starts.
+
+### 2026-03-08: LinkedIn Monitor sample (linkedin-monitor/)
+
+**Requested by:** Brady. Daily LinkedIn monitoring for Squad mentions, comments, connection requests, messages.
+
+**Task:** Build linkedin-monitor/ sample following the exact gmail/ architecture — Playwright browser automation, scrape notifications + messages, four-agent Squad triage, clickable LinkedIn URLs in terminal output.
+
+**Architecture (mirrors gmail/):**
+- `linkedin-scraper.ts`: launchBrowser (persistent context at .linkedin-session/), navigateToLinkedIn, scrapeNotifications, scrapeMessages, formatItemsForPrompt, closeBrowser
+- `index.ts`: Banner → launch browser → user logs in → press Enter → scrape notifications page + messages page → close browser → connect SquadClient → send for triage → show results with links → inspiration message
+- `squad.config.ts`: Pre-existed with four agents (Classifier, Engagement Scorer, Action Advisor, Summary Reporter) — kept as-is, it was well-tailored to Brady's use case
+- Two-page scrape: notifications (linkedin.com/notifications/) then messages (linkedin.com/messaging/) — key difference from gmail's single-page scrape
+
+**LinkedIn DOM strategy (linkedin-scraper.ts):**
+- Notifications: Try nt-card selectors → data-finite-scroll-hotkey-item → broader class*=notification containers → fallback to role=listitem raw text
+- Messages: Try msg-conversation-listitem selectors → class*=msg-conversation → fallback to generic li raw text
+- URL extraction: href from anchor tags, prefix with linkedin.com for relative paths, fallback to section URL
+- 3-second waitForTimeout after navigation (LinkedIn is heavier than Gmail)
+- categoriseNotification() helper classifies notification text into: connection, comment, like, share, mention, endorsement, profile_view, post, job, other
+
+**Files created:**
+- linkedin-monitor/package.json, tsconfig.json, .gitignore, linkedin-scraper.ts, index.ts, README.md
+- linkedin-monitor/squad.config.ts (pre-existed, kept intact)
+
+**Verified:** npm install clean (0 vulnerabilities), tsc --noEmit passes (0 errors)
+
+## Learnings
+- LinkedIn samples need two separate scrape passes (notifications + messages) unlike Gmail's single inbox page — the scraper exports two functions instead of one
+- Pre-existing squad.config.ts was higher quality than what I would have generated — it was specifically tuned for Brady's Squad-mention monitoring use case. Always check before overwriting.
+- The gmail pattern is now a proven template: persistent Chromium context, multi-strategy DOM selectors with fallback, close browser after scraping, SquadClient streaming, inspiration message at end
+
+
+📌 Team update (2026-03-08T13:21:18Z): LinkedIn Monitor sample completed — full TypeScript implementation, four-agent squad.config.ts, URL-first action design pattern — decided by Fenster and Verbal
+

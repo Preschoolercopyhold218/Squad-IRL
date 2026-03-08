@@ -2107,3 +2107,49 @@ Replaced the paste-your-emails UX in `email-inbox-triage` with a Playwright-base
 - **Arch pattern:** Extend squad.config.ts tools, use existing SquadClient pattern, integrate OAuth token refresh.
 - **Future consideration:** Separate gmail-actions-demo sample for production-hardened version with all controls.
 **Next:** Awaiting product decision. If approved, implement with all 5 security mitigations.
+
+
+
+### 2026-03-08: LinkedIn Monitor sample architecture
+# Decision: LinkedIn Monitor sample architecture
+
+**By:** Fenster (Core Dev)
+**Date:** 2026-03-08
+**Context:** Building linkedin-monitor/ sample
+
+## Decision
+
+The linkedin-monitor sample follows the exact gmail/ architecture pattern:
+- Playwright persistent browser context for session reuse
+- Multi-strategy DOM selectors with raw text fallback (LinkedIn DOM is heavily obfuscated)
+- Two-page scrape (notifications + messages) rather than gmail's single-page inbox scrape
+- Pre-existing squad.config.ts was kept intact — it was already tailored for Brady's Squad-mention monitoring use case with four well-defined agents (Classifier, Engagement Scorer, Action Advisor, Summary Reporter)
+
+## Why
+
+- Consistency across samples matters — users should recognise the same pattern in gmail/ and linkedin-monitor/
+- LinkedIn's DOM is at least as volatile as Gmail's, so the same fallback strategy applies
+- The existing squad.config.ts had better agent charters than a generic rewrite (Squad-mention detection, LinkedIn engagement dynamics, URL-first action advice)
+
+## Impact
+
+- New sample at linkedin-monitor/ ready for Brady's daily use
+- Establishes the two-page-scrape variant of the gmail pattern for future social media samples
+
+
+### 2026-03-08: LinkedIn Monitor — URL-First Action Design
+# Decision: LinkedIn Monitor — URL-First Action Design
+
+**By:** Verbal (Prompt Engineer)
+**Date:** 2026-03-08
+**Sample:** linkedin-monitor
+
+## What
+The Action Advisor agent charter mandates that **every recommendation includes a direct LinkedIn URL** as its primary output. URLs are formatted on their own line (`🔗 [Action]: URL`) and are never optional. The Summary Reporter mirrors this — every actionable item in the briefing includes its URL.
+
+## Why
+The entire value prop of this sample is "see what needs attention, click the link, take action." Without URLs, the user gets advice they can't act on without manually searching LinkedIn. Brady's workflow is: scan briefing → click links → respond → done. The URL IS the UX.
+
+## Impact
+Any future LinkedIn-related samples or agents should follow this URL-first pattern. If input data lacks URLs, agents must flag the gap (`⚠️ URL not provided`) rather than silently omitting them.
+
