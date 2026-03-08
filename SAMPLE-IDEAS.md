@@ -1,4 +1,4 @@
-# 17 Real-World Squad Use Cases
+# 18 Real-World Squad Use Cases
 
 > Each is technically unique. Each solves a problem people actually have. Each shows multi-agent collaboration visibly.
 
@@ -35,7 +35,7 @@
 
 ---
 
-## 3. 📋 Social Media Content Manager
+## 3. ✅ Social Media Content Manager
 **Problem:** Creating, scheduling, and monitoring posts across platforms takes hours daily. Engagement opportunities get missed.
 
 **How it works:**
@@ -133,7 +133,7 @@
 
 ---
 
-## 9. 📋 Content Creation Workflow (Multi-Agent)
+## 9. ✅ Content Creation Workflow (Multi-Agent)
 **Problem:** Writing blog posts, guides, or documentation is slow. Writers need research, outlines, editing, SEO help, publishing.
 
 **How it works:**
@@ -205,7 +205,7 @@
 
 ---
 
-## 13. 📋 Meeting Recap & Action Item Generator
+## 13. ✅ Meeting Recap & Action Item Generator
 **Problem:** After meetings, someone spends 1 hour creating recap, extracting action items, sending followups. Decisions get lost in chat.
 
 **How it works:**
@@ -241,7 +241,7 @@
 
 ---
 
-## 15. 📋 A/B Test Orchestrator
+## 15. ✅ A/B Test Orchestrator
 **Problem:** Running A/B tests requires coordination: variant creation, traffic splitting, metrics collection, statistical analysis. Takes weeks to get results.
 
 **How it works:**
@@ -277,7 +277,7 @@
 
 ---
 
-## 17. 📋 Realtor Home Sales Package Builder (Playwright)
+## 17. ✅ Realtor Home Sales Package Builder (Playwright)
 **Problem:** Real estate agents spend hours manually building comparable sales (comps), market analyses, and listing presentations for each property. Research is scattered across multiple sites (Redfin, Zillow, MLS).
 
 **How it works:**
@@ -312,17 +312,17 @@
 
 ## Summary
 
-**Legend:** ✅ Updated & working | 📋 Idea only
+**Legend:** ✅ Built & working
 
-**These 17 use cases represent:**
-- ✅ 13 fully upgraded with real-world integrations and clean TypeScript builds
-- 📋 4 ideas ready to be built
+**All 18 use cases are fully built with clean TypeScript builds:**
+- ✅ 18/18 samples complete — zero ideas remaining
 - ❌ 4 ideas reviewed and dropped by team (Podcast Transcription, Competitive Intelligence Monitor, Medical Appointment & Insurance Verification, E-Commerce Personalization)
 - ✅ 6 with Playwright browser automation (Price Monitor, Travel Planner, Real Estate, Job Tracker, Realtor Sales Package, LinkedIn Monitor)
-- ✅ 4 with file-based analysis (Receipt Scanner, Contract Review, Support Tickets, Compliance Checker)
+- ✅ 5 with file/text-based analysis (Receipt Scanner with OCR, Contract Review, Support Tickets, Compliance Checker, Inventory Manager)
+- ✅ 4 with text input interaction (Appointment Scheduler, Content Creation, Meeting Recap, Social Media Manager)
 - ✅ 1 with GitHub CLI integration (Bug Triage)
-- ✅ 1 with CSV data processing (Inventory Manager)
-- ✅ 1 with text input analysis (Appointment Scheduler)
+- ✅ 1 with experiment brief input (A/B Test Orchestrator)
+- ✅ 1 with OCR image scanning (Receipt Scanner — tesseract.js for receipt photos + hotel folio itemization)
 - ✅ Multiple interaction models (automation, human-in-the-loop, real-time monitoring, scheduled batch)
 - ✅ Real problems that real people face daily, with immediate value proposition
 

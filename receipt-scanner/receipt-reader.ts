@@ -1,11 +1,15 @@
 // ─── Receipt Reader — File System Scanner ───────────────────────────────────
 // Reads receipt files from a folder and formats them for Squad analysis.
 // Read-only: never modifies receipt files.
+// Supports text files directly and image files via Tesseract OCR.
 
 import { readdir, readFile, stat, access } from 'node:fs/promises';
 import { join, extname, resolve } from 'node:path';
+import Tesseract from 'tesseract.js';
 
-const SUPPORTED_EXTENSIONS = new Set(['.txt', '.md', '.csv']);
+const TEXT_EXTENSIONS = new Set(['.txt', '.md', '.csv']);
+const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.bmp']);
+const SUPPORTED_EXTENSIONS = new Set([...TEXT_EXTENSIONS, ...IMAGE_EXTENSIONS]);
 
 export interface ReceiptFile {
   filename: string;
@@ -34,7 +38,16 @@ export async function validateFolder(folderPath: string): Promise<string> {
 }
 
 /**
- * Scan a folder for receipt files (.txt, .md, .csv).
+ * Run Tesseract OCR on an image file and return the extracted text.
+ */
+export async function ocrImage(filePath: string): Promise<string> {
+  const { data: { text } } = await Tesseract.recognize(filePath, 'eng');
+  return text.trim();
+}
+
+/**
+ * Scan a folder for receipt files (.txt, .md, .csv, .jpg, .jpeg, .png, .gif, .bmp).
+ * Text files are read directly; image files are OCR'd via Tesseract.
  * Returns file contents sorted by filename for deterministic output.
  */
 export async function scanReceipts(folderPath: string): Promise<ReceiptFile[]> {
@@ -51,7 +64,14 @@ export async function scanReceipts(folderPath: string): Promise<ReceiptFile[]> {
     const info = await stat(fullPath);
     if (!info.isFile()) continue;
 
-    const content = await readFile(fullPath, 'utf-8');
+    let content: string;
+
+    if (IMAGE_EXTENSIONS.has(ext)) {
+      content = await ocrImage(fullPath);
+    } else {
+      content = await readFile(fullPath, 'utf-8');
+    }
+
     if (content.trim().length === 0) continue;
 
     receiptFiles.push({ filename: entry, content: content.trim() });

@@ -99,3 +99,30 @@
 - **Agents:** Receipt Parser, Expense Categorizer, Anomaly Detector, Report Builder
 - **Pattern reuse:** Same SquadClient, streaming, ANSI output, banner/closing flow as gmail/
 - TypeScript strict mode, ESM-only, zero errors on `npx tsc --noEmit`
+
+### Receipt Scanner v2 — OCR, Hotel Itemization, Markdown Output (2026-03-08)
+📌 **Requested by:** Brady
+- Upgraded receipt-scanner sample with three new capabilities:
+  1. **Image/OCR support** via tesseract.js — `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp` files are OCR'd locally before AI analysis
+  2. **Hotel folio itemization** — Agents upgraded to parse multi-day hotel bills, categorize by hotel sub-categories, and build day-by-day markdown breakdowns
+  3. **Markdown output** — Analysis results captured during streaming and written to `expense-report.md`
+- **Security considerations:**
+  - OCR runs locally via tesseract.js — image data stays on-device, only extracted text goes to AI model
+  - Privacy note in README updated to clarify OCR-local vs. text-to-AI distinction
+  - Hotel folio sample uses same fictional data pattern (Jordan Smith, masked Amex ****1093, example.com)
+  - `expense-report.md` written to CWD — read-only principle maintained for receipt source files
+  - No new PII vectors: hotel folio sample contains only fictional business data
+- **Files changed:** receipt-reader.ts, squad.config.ts, index.ts, package.json, README.md
+- **Files created:** sample-receipts/hotel-folio.txt
+- **Dependencies added:** tesseract.js ^5.0.0
+- Build and TypeScript strict-mode check pass clean
+
+
+### 📌 Team update (2026-03-08T14:54:25Z): Receipt Scanner upgraded with local OCR processing — decided by Baer
+- Receipt-scanner now supports image files via tesseract.js OCR
+- OCR runs entirely on local machine — binary image never leaves device
+- Only extracted text is sent to AI model for analysis
+- Privacy-focused design: meaningful distinction for users with sensitive receipt images (credit card slips, etc.)
+- README and privacy note updated to clarify privacy boundary
+- Hotel folio sample created for enhanced demo scenario
+- Demonstrates security-first thinking: privacy preservation without sacrificing functionality

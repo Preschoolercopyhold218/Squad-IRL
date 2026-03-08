@@ -1,14 +1,17 @@
-// ─── Receipt Scanner & Expense Analyzer ─────────────────────────────────────
-// Reads receipt files from a folder and processes them with a four-agent
-// financial squad (parser, categorizer, anomaly detector, report builder)
-// for a complete expense analysis.
+// ─── Content Creation Workflow — Squad Edition ───────────────────────────────
+// Takes a blog topic (typed or loaded from a file) and produces a polished,
+// SEO-optimized article through a four-agent pipeline: Researcher, Outliner,
+// Writer, and Editor.
 
+import { createInterface } from 'node:readline/promises';
+import { stdin, stdout } from 'node:process';
+import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { SquadClient } from '@bradygaster/squad-sdk/client';
 import type { SquadSession, SquadSessionConfig } from '@bradygaster/squad-sdk/adapter';
 import type { SquadSessionEvent, SquadSessionEventHandler } from '@bradygaster/squad-sdk/adapter';
-import { writeFile } from 'node:fs/promises';
 import squadConfig from './squad.config.js';
-import { scanReceipts, formatReceiptsForPrompt } from './receipt-reader.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ANSI helpers
@@ -28,15 +31,16 @@ const C = {
 
 function banner(): void {
   console.log();
-  console.log(`${C.cyan}${C.bold}  🧾  Receipt Scanner & Expense Analyzer${C.reset}`);
-  console.log(`${C.dim}  ─────────────────────────────────────────${C.reset}`);
-  console.log(`${C.dim}  Reads receipt files from a folder and analyzes them with AI.${C.reset}`);
-  console.log(`${C.dim}  Four specialists: Parser · Categorizer · Anomaly Detector · Report Builder${C.reset}`);
+  console.log(`${C.cyan}${C.bold}  ✍️  Content Creation Workflow — Squad Edition${C.reset}`);
+  console.log(`${C.dim}  ─────────────────────────────────────────────${C.reset}`);
+  console.log(`${C.dim}  Give us a topic, get a polished blog post.${C.reset}`);
+  console.log(`${C.dim}  Four specialists: Researcher · Outliner · Writer · Editor${C.reset}`);
   console.log();
 }
 
 /**
  * Extract the human-readable content from a squad response.
+ * The response may be a string, or an event object with data.content.
  */
 function extractContent(result: unknown): string | null {
   if (typeof result === 'string') return result;
@@ -44,12 +48,17 @@ function extractContent(result: unknown): string | null {
 
   const obj = result as Record<string, any>;
 
+  // Event shape: { data: { content: "..." } }
   if (obj.data?.content && typeof obj.data.content === 'string') {
     return obj.data.content;
   }
+
+  // Direct content shape: { content: "..." }
   if (obj.content && typeof obj.content === 'string') {
     return obj.content;
   }
+
+  // Message shape: { message: "..." }
   if (obj.message && typeof obj.message === 'string') {
     return obj.message;
   }
@@ -58,12 +67,29 @@ function extractContent(result: unknown): string | null {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Topic input — from file or interactive prompt
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function loadTopicFromFile(filePath: string): Promise<string> {
+  const resolved = resolve(filePath);
+  if (!existsSync(resolved)) {
+    throw new Error(`File not found: ${resolved}`);
+  }
+  const content = await readFile(resolved, 'utf-8');
+  const trimmed = content.trim();
+  if (!trimmed) {
+    throw new Error(`File is empty: ${resolved}`);
+  }
+  return trimmed;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Build system prompt from squad config
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function buildSystemPrompt(): string {
+function buildSystemPrompt(topic: string): string {
   const config = squadConfig;
-  const teamName = config.team?.name ?? 'Receipt Scanner & Expense Analyzer Squad';
+  const teamName = config.team?.name ?? 'Content Creation Squad';
   const teamDesc = config.team?.description ?? '';
   const projectCtx = config.team?.projectContext ?? '';
 
@@ -93,16 +119,29 @@ ${agentDescriptions}
 
 ${routingRules}
 
+## The Topic
+
+The user wants a blog post on the following topic:
+
+> ${topic}
+
 ## Instructions
 
-You are a receipt analysis assistant powered by a squad of financial specialists.
-When the user provides receipt data, coordinate your specialists to provide a complete expense analysis.
-For broad requests ("analyze my receipts"), engage all specialists: parse, categorize, detect anomalies, and build a report.
-For specific requests ("categorize the restaurant receipt"), route to the right specialist.
+You are a content creation assistant powered by a squad of specialists.
+Coordinate all four specialists to produce a complete, polished blog post:
 
-Be organized, precise with numbers, and actionable. Use clear sections and visual hierarchy.
-Never fabricate receipt data — only work with what the user provides.
-When presenting results, follow the pipeline: parsing → categorization → anomaly detection → summary report.`;
+1. **Researcher** goes first — gather facts, statistics, examples, and fresh angles on the topic
+2. **Outliner** designs the structure — sections, narrative arc, word count targets, content elements
+3. **Writer** drafts the complete article following the outline, maintaining voice and engagement
+4. **Editor** polishes grammar, tone, and flow, then optimizes for SEO with keywords, meta description, and readability
+
+Produce the FULL content pipeline in one response. The final output should be a publish-ready blog post with:
+- Optimized title
+- Meta description
+- Complete article with proper heading hierarchy
+- SEO notes (primary keywords, readability score)
+
+Be thorough, creative, and produce genuinely useful content. Quality over speed.`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -113,12 +152,11 @@ async function sendAndStream(
   client: SquadClient,
   session: SquadSession,
   prompt: string,
-): Promise<string> {
+): Promise<void> {
   console.log();
-  console.log(`${C.dim}  ─────────────────────────────────────────${C.reset}`);
+  console.log(`${C.dim}  ─────────────────────────────────────────────${C.reset}`);
 
   let receivedContent = false;
-  let contentBuffer = '';
 
   const deltaHandler: SquadSessionEventHandler = (event: SquadSessionEvent) => {
     const content = (event as any).content ?? (event as any).data?.content ?? '';
@@ -126,7 +164,6 @@ async function sendAndStream(
       if (!receivedContent) process.stdout.write(`${C.white}`);
       receivedContent = true;
       process.stdout.write(content);
-      contentBuffer += content;
     }
   };
 
@@ -143,7 +180,6 @@ async function sendAndStream(
         const text = extractContent(result);
         if (text) {
           console.log(`${C.white}${text}${C.reset}`);
-          contentBuffer = text;
         } else {
           console.log(`${C.yellow}  (Received a response but couldn't parse it.)${C.reset}`);
         }
@@ -176,8 +212,6 @@ async function sendAndStream(
     if (receivedContent) process.stdout.write(`${C.reset}\n`);
     throw err;
   }
-
-  return contentBuffer;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -187,36 +221,46 @@ async function sendAndStream(
 async function main(): Promise<void> {
   banner();
 
-  // Determine receipt folder: CLI arg or default to ./sample-receipts/
-  const folderArg = process.argv[2];
-  const receiptFolder = folderArg ?? './sample-receipts/';
+  const rl = createInterface({ input: stdin, output: stdout });
 
-  console.log(`${C.dim}  📂 Scanning folder: ${receiptFolder}${C.reset}`);
+  // 1. Get the topic — from CLI arg (file path) or interactive prompt
+  let topic: string;
+  const filePath = process.argv[2];
 
-  // Read receipt files
-  let receipts;
-  try {
-    receipts = await scanReceipts(receiptFolder);
-  } catch (err: any) {
-    console.error();
-    console.error(`${C.red}${C.bold}  Failed to read receipts.${C.reset}`);
-    console.error(`${C.yellow}  ${err?.message ?? err}${C.reset}`);
-    console.error(`${C.dim}  Usage: npm start                    (uses ./sample-receipts/)${C.reset}`);
-    console.error(`${C.dim}         npm start -- /path/to/receipts${C.reset}`);
-    process.exit(1);
+  if (filePath) {
+    console.log(`${C.magenta}  📂 Loading topic from: ${filePath}${C.reset}`);
+    try {
+      topic = await loadTopicFromFile(filePath);
+      console.log(`${C.green}  ✓ Loaded topic (${topic.length} characters)${C.reset}`);
+    } catch (err: any) {
+      console.error(`${C.red}${C.bold}  Failed to load topic file.${C.reset}`);
+      console.error(`${C.dim}  ${err?.message ?? err}${C.reset}`);
+      console.error();
+      console.error(`${C.yellow}  Usage:${C.reset}`);
+      console.error(`${C.dim}    npm start                                        ${C.reset}${C.dim}(type topic interactively)${C.reset}`);
+      console.error(`${C.dim}    npm start -- content-topics/technical-blog-post.md${C.reset}`);
+      console.error(`${C.dim}    npm start -- content-topics/product-launch.md     ${C.reset}`);
+      rl.close();
+      process.exit(1);
+    }
+  } else {
+    console.log(`${C.dim}  Tip: You can also load a topic file:${C.reset}`);
+    console.log(`${C.dim}    npm start -- content-topics/technical-blog-post.md${C.reset}`);
+    console.log();
+    topic = await rl.question(`${C.cyan}  📝 What should the blog post be about?\n  ${C.bold}> ${C.reset}`);
+    topic = topic.trim();
+
+    if (!topic) {
+      console.log(`${C.yellow}  No topic provided. Exiting.${C.reset}`);
+      rl.close();
+      return;
+    }
   }
 
-  console.log(`${C.green}  ✓ Found ${receipts.length} receipt file(s): ${receipts.map(r => r.filename).join(', ')}${C.reset}`);
+  console.log();
+  console.log(`${C.green}  ✓ Topic: ${C.bold}${topic.length > 120 ? topic.slice(0, 117) + '...' : topic}${C.reset}`);
 
-  if (receipts.length === 0) {
-    console.log(`${C.yellow}  No receipt files found (.txt, .md, .csv, .jpg, .jpeg, .png, .gif, .bmp). Add some and try again.${C.reset}`);
-    return;
-  }
-
-  // Build the analysis prompt from receipt contents
-  const analysisPrompt = formatReceiptsForPrompt(receipts);
-
-  // Suppress noisy CLI subprocess warnings
+  // Suppress noisy CLI subprocess warnings (e.g., Node.js experimental SQLite)
   const origStderrWrite = process.stderr.write.bind(process.stderr);
   process.stderr.write = (chunk: any, ...args: any[]) => {
     const str = typeof chunk === 'string' ? chunk : chunk.toString();
@@ -226,9 +270,9 @@ async function main(): Promise<void> {
     return origStderrWrite(chunk, ...args);
   };
 
-  // Connect to the Squad
+  // 2. Connect to the Squad
   console.log();
-  console.log(`${C.magenta}  Connecting to your expense analysis squad...${C.reset}`);
+  console.log(`${C.magenta}  Connecting to your content creation squad...${C.reset}`);
 
   let client: SquadClient;
   let session: SquadSession;
@@ -246,13 +290,13 @@ async function main(): Promise<void> {
       streaming: true,
       systemMessage: {
         mode: 'append' as const,
-        content: buildSystemPrompt(),
+        content: buildSystemPrompt(topic),
       },
       onPermissionRequest: () => ({ kind: 'approved' as const }),
     };
 
     session = await client.createSession(sessionConfig);
-    console.log(`${C.green}  ✓ Connected! Your expense analysis squad is ready.${C.reset}`);
+    console.log(`${C.green}  ✓ Connected! Your content squad is ready.${C.reset}`);
   } catch (err: any) {
     const msg = err?.message ?? String(err);
 
@@ -268,45 +312,30 @@ async function main(): Promise<void> {
       console.error(`${C.red}  Connection failed: ${msg}${C.reset}`);
     }
 
+    rl.close();
     process.exit(1);
   }
 
-  // Send receipts to the squad for analysis
-  let reportContent = '';
+  // 3. Send the topic to the squad for content creation
   try {
     console.log();
-    console.log(`${C.dim}  Sending ${receipts.length} receipt(s) to the squad for analysis...${C.reset}`);
-    reportContent = await sendAndStream(client, session, analysisPrompt);
+    console.log(`${C.dim}  Sending topic to the squad — research → outline → write → edit...${C.reset}`);
+    await sendAndStream(client, session, `Create a complete, polished blog post on this topic: ${topic}`);
   } catch (err: any) {
     console.error(`${C.red}  Error: ${err?.message ?? err}${C.reset}`);
   }
 
-  // Write markdown report to disk
-  if (reportContent.length > 0) {
-    try {
-      await writeFile('expense-report.md', reportContent, 'utf-8');
-      console.log();
-      console.log(`${C.green}  📄 Report saved to expense-report.md${C.reset}`);
-    } catch (err: any) {
-      console.error(`${C.yellow}  ⚠️  Could not save report: ${err?.message ?? err}${C.reset}`);
-    }
-  }
-
-  // Closing
+  // Cleanup
   console.log();
-  console.log(`${C.green}  ✅ Expense analysis complete!${C.reset}`);
+  console.log(`${C.green}  ✅ Blog post created!${C.reset}`);
   console.log();
   console.log(`${C.cyan}  💡 This sample is just the beginning. You could extend it to:${C.reset}`);
-  console.log(`${C.dim}     • Connect to your bank's CSV export for automatic categorization${C.reset}`);
-  console.log(`${C.dim}     • Auto-generate expense reports for accounting software${C.reset}`);
-  console.log(`${C.dim}     • Track spending trends over time with scheduled runs${C.reset}`);
-  console.log(`${C.dim}     • Scan paper receipts with OCR (already built in via tesseract.js!)${C.reset}`);
-  console.log(`${C.dim}     • Break down multi-day hotel folios by day and category${C.reset}`);
+  console.log(`${C.dim}     • Generate social media snippets from the blog post${C.reset}`);
+  console.log(`${C.dim}     • Create a content calendar that produces posts on a schedule${C.reset}`);
+  console.log(`${C.dim}     • Add a Fact-Checker agent that verifies claims before publishing${C.reset}`);
+  console.log(`${C.dim}     • Connect to your CMS API to publish directly to WordPress/Ghost/Medium${C.reset}`);
   console.log();
-  console.log(`${C.yellow}  🔒 Privacy note: Receipt data was sent to the AI model for analysis${C.reset}`);
-  console.log(`${C.yellow}     but is not stored by this application. Your files were read-only.${C.reset}`);
-  console.log();
-  console.log(`${C.white}  The Squad SDK makes it easy to add tools that take real action.${C.reset}`);
+  console.log(`${C.white}  Great content isn't written — it's engineered.${C.reset}`);
   console.log(`${C.white}  See the README for ideas, or just start hacking!${C.reset}`);
   console.log();
 
@@ -317,6 +346,8 @@ async function main(): Promise<void> {
   try {
     await client.disconnect();
   } catch { /* best effort */ }
+
+  rl.close();
 }
 
 main().catch((err) => {

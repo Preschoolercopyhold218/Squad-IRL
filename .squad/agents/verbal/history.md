@@ -99,3 +99,22 @@ Created `.squad/skills/history-hygiene/SKILL.md` to codify lesson from Kobayashi
 - Routing: 5 rules — 4 direct routes for individual agents, 1 full-tier catch-all for "review|analyze|contract|everything"
 - TypeScript strict mode, clean `npx tsc --noEmit`, zero errors
 
+### Content Creation Workflow Sample — Full Pipeline Build
+- Created `content-creation/` sample: 7 files (squad.config.ts, index.ts, package.json, tsconfig.json, README.md, 2 topic files)
+- **4 agents**: Researcher (facts/stats/angles), Outliner (structure/blueprint), Writer (draft with voice), Editor (polish + SEO — combines editorial and SEO into one agent for demo simplicity)
+- **Text-input pattern**: follows contract-reviewer's file-based input approach — accepts CLI arg for topic file OR interactive readline prompt
+- Dropped Publisher agent (original spec had 6) — 4 agents keeps the demo focused; SEO merged into Editor
+- `content-topics/` directory with 2 sample briefs: technical blog post (multi-agent AI systems) and product launch (code review tool) — both include audience, tone, angle guidance, and word count targets
+- Charter quality: each agent has 40-60 line charters with specific output formats, expertise lists, style guidelines, and explicit role boundaries preventing overlap
+- System prompt embeds topic directly — no follow-up loop needed, squad produces full pipeline in one response
+- Closing inspiration message pattern: "Great content isn't written — it's engineered."
+- `npx tsc --noEmit` clean, zero errors, TypeScript strict mode
+
+
+
+### 📌 Team update (2026-03-08T14:54:25Z): Content Creation sample uses 4 agents (not 6) — decided by Verbal
+- SEO merged into Editor phase for natural workflow integration
+- Publisher dropped (API/OAuth complexity without demo benefit)
+- 4-agent pattern consistent with gmail, linkedin-monitor, contract-reviewer samples
+- Aspirational spec (6 agents) remains in SAMPLE-IDEAS.md; implementation uses practical 4-agent design
+- Future extension: Publisher and Fact-Checker agents can be added

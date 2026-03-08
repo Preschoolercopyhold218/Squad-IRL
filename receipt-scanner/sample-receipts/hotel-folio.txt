@@ -1,0 +1,41 @@
+HYATT REGENCY CHICAGO
+151 East Wacker Drive, Chicago, IL 60601
+────────────────────────────────────────
+Guest: Jordan Smith
+Confirmation: HR-2025-88431
+Check-in:  January 20, 2025
+Check-out: January 23, 2025
+Room: 1204 (King, City View)
+────────────────────────────────────────
+
+DATE         DESCRIPTION              AMOUNT
+─────────────────────────────────────────────
+01/20/2025   Room - King City View    $249.00
+01/20/2025   Valet Parking             $65.00
+01/20/2025   Room Service - Dinner     $47.50
+01/20/2025   Minibar                   $12.00
+
+01/21/2025   Room - King City View    $249.00
+01/21/2025   Valet Parking             $65.00
+01/21/2025   Restaurant - Breakfast    $28.50
+01/21/2025   Restaurant - Dinner       $62.00
+01/21/2025   Business Center            $8.00
+01/21/2025   Laundry Service           $22.00
+
+01/22/2025   Room - King City View    $249.00
+01/22/2025   Valet Parking             $65.00
+01/22/2025   Restaurant - Breakfast    $32.00
+01/22/2025   Room Service - Lunch      $38.00
+01/22/2025   Spa - Wellness Center     $55.00
+
+─────────────────────────────────────────────
+                    Subtotal       $1,247.00
+                    Room Tax (17.4%)  $130.02
+                    Tourism Fee        $12.00
+                    Resort Fee         $45.00
+                    ─────────────────────────
+                    TOTAL          $1,434.02
+
+Payment: Amex ****1093
+Folio: F-2025-01-88431
+Purpose: Client meetings — Project Phoenix

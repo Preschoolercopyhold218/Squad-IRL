@@ -2820,3 +2820,33 @@ Better to have 8-9 bulletproof samples that customers trust, than 12 samples wit
 - Portfolio: 13 built ✅ + 5 ideas 📋 = 18 total (down from 21)
 **Why:** Team consensus on viability, audience appeal, and risk. Baer flagged healthcare (HIPAA) and competitive intel (ethics) as 🔴. McManus ranked Realtor 5/5 for appeal. Keaton confirmed portfolio balance.
 
+### 2026-03-08: OCR images processed locally — only extracted text sent to AI model
+
+**By:** Baer (Security)
+**When:** 2026-03-08
+**What:** Receipt-scanner now supports image files via tesseract.js OCR. The OCR runs entirely on the local machine. Only the extracted text is sent to the AI model for analysis — the image binary itself never leaves the device.
+**Why:** This is a meaningful privacy distinction for users with sensitive receipt images (e.g., photos of credit card slips). The README and privacy note have been updated to make this clear.
+**Affects:** receipt-scanner sample, README privacy note
+
+
+### 2026-03-08: Content Creation Sample Uses 4 Agents, Not 6
+
+**By:** Verbal (Prompt Engineer)
+**When:** 2026-03-08
+**What:** The Content Creation Workflow sample uses **4 agents** (Researcher, Outliner, Writer, Editor) instead of the 6 originally described in SAMPLE-IDEAS.md (Research, Outline, Writer, SEO, Editor, Publisher).
+**Why:** 
+- **SEO merged into Editor**: SEO optimization (keywords, meta descriptions, readability) is a natural extension of editorial review — splitting them creates artificial handoff friction with no demo benefit.
+- **Publisher dropped**: Publishing to a blog platform requires API keys, OAuth flows, and platform-specific configuration that add setup burden without showcasing Squad's multi-agent coordination. Extension idea is documented in README.
+- **4 agents is the sweet spot**: Consistent with gmail (4), linkedin-monitor (4), contract-reviewer (4). Enough agents to demonstrate pipeline coordination without overwhelming the demo.
+
+**Impact:** SAMPLE-IDEAS.md still lists 6 agents — that's the aspirational spec, this is the practical implementation. Future versions could add Publisher and Fact-Checker agents as extensions.
+
+
+### 2026-03-08: Meeting Recap uses text-input pattern (no Playwright)
+
+**By:** Kujan (SDK Expert)
+**When:** 2026-03-08
+**What:** The meeting-recap sample uses a text-input pattern (paste or file path) rather than any browser automation or recording integration. Input is handled via Node readline — paste mode uses an "END" sentinel line, file mode uses fs.readFileSync.
+**Why:** Meeting transcripts are inherently text. Adding recording/transcription would pull in heavy dependencies (Whisper, ffmpeg) and platform-specific audio APIs. Keeping it text-input means the sample works everywhere, demonstrates the squad pattern cleanly, and stays focused on what the SDK does best — multi-agent coordination.
+**Impact:** Future samples that need text input can follow this same pattern (readline + file path fallback). The appointment-scheduler already uses a similar approach.
+

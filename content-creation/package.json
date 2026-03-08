@@ -1,0 +1,17 @@
+{
+  "name": "content-creation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Squad-powered content creation pipeline — takes a blog topic and produces a polished, SEO-optimized article through research, outlining, writing, and editing.",
+  "type": "module",
+  "scripts": {
+    "start": "npx tsx index.ts"
+  },
+  "dependencies": {
+    "@bradygaster/squad-sdk": "^0.8.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4",
+    "typescript": "^5.7.0"
+  }
+}

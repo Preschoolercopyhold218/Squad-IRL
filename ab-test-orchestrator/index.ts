@@ -1,14 +1,18 @@
-// ─── Receipt Scanner & Expense Analyzer ─────────────────────────────────────
-// Reads receipt files from a folder and processes them with a four-agent
-// financial squad (parser, categorizer, anomaly detector, report builder)
-// for a complete expense analysis.
+// ─── A/B Test Orchestrator — Squad Edition ───────────────────────────────────
+// Reads an experiment hypothesis (typed or from a brief file) and feeds it to a
+// four-agent squad (experiment designer, traffic strategist, metrics analyst,
+// results interpreter) for a complete A/B test plan.
 
 import { SquadClient } from '@bradygaster/squad-sdk/client';
 import type { SquadSession, SquadSessionConfig } from '@bradygaster/squad-sdk/adapter';
 import type { SquadSessionEvent, SquadSessionEventHandler } from '@bradygaster/squad-sdk/adapter';
-import { writeFile } from 'node:fs/promises';
 import squadConfig from './squad.config.js';
-import { scanReceipts, formatReceiptsForPrompt } from './receipt-reader.js';
+import {
+  readExperimentFile,
+  readExperimentFromStdin,
+  formatExperimentForPrompt,
+} from './experiment-reader.js';
+import type { ExperimentInput } from './experiment-reader.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ANSI helpers
@@ -28,10 +32,10 @@ const C = {
 
 function banner(): void {
   console.log();
-  console.log(`${C.cyan}${C.bold}  🧾  Receipt Scanner & Expense Analyzer${C.reset}`);
+  console.log(`${C.cyan}${C.bold}  🧪  A/B Test Orchestrator — Squad Edition${C.reset}`);
   console.log(`${C.dim}  ─────────────────────────────────────────${C.reset}`);
-  console.log(`${C.dim}  Reads receipt files from a folder and analyzes them with AI.${C.reset}`);
-  console.log(`${C.dim}  Four specialists: Parser · Categorizer · Anomaly Detector · Report Builder${C.reset}`);
+  console.log(`${C.dim}  Turn experiment hypotheses into rigorous A/B test plans.${C.reset}`);
+  console.log(`${C.dim}  Four specialists: Designer · Traffic Strategist · Metrics Analyst · Results Interpreter${C.reset}`);
   console.log();
 }
 
@@ -47,9 +51,11 @@ function extractContent(result: unknown): string | null {
   if (obj.data?.content && typeof obj.data.content === 'string') {
     return obj.data.content;
   }
+
   if (obj.content && typeof obj.content === 'string') {
     return obj.content;
   }
+
   if (obj.message && typeof obj.message === 'string') {
     return obj.message;
   }
@@ -63,7 +69,7 @@ function extractContent(result: unknown): string | null {
 
 function buildSystemPrompt(): string {
   const config = squadConfig;
-  const teamName = config.team?.name ?? 'Receipt Scanner & Expense Analyzer Squad';
+  const teamName = config.team?.name ?? 'A/B Test Orchestrator Squad';
   const teamDesc = config.team?.description ?? '';
   const projectCtx = config.team?.projectContext ?? '';
 
@@ -95,14 +101,14 @@ ${routingRules}
 
 ## Instructions
 
-You are a receipt analysis assistant powered by a squad of financial specialists.
-When the user provides receipt data, coordinate your specialists to provide a complete expense analysis.
-For broad requests ("analyze my receipts"), engage all specialists: parse, categorize, detect anomalies, and build a report.
-For specific requests ("categorize the restaurant receipt"), route to the right specialist.
+You are an A/B test planning assistant powered by a squad of experimentation specialists.
+When the user provides an experiment hypothesis or brief, coordinate all four specialists to deliver a complete test plan.
+For broad requests ("plan this experiment"), engage all specialists: design variants, plan traffic, define metrics, and prepare the analysis framework.
+For specific requests ("what sample size do I need?"), route to the right specialist.
 
-Be organized, precise with numbers, and actionable. Use clear sections and visual hierarchy.
-Never fabricate receipt data — only work with what the user provides.
-When presenting results, follow the pipeline: parsing → categorization → anomaly detection → summary report.`;
+Be structured, quantitative, and actionable. Use tables, formulas, and specific numbers.
+Never fabricate data — work only with what the user provides.
+When presenting the test plan, use a clear structure: hypothesis → variants → traffic plan → metrics → analysis framework.`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -113,12 +119,11 @@ async function sendAndStream(
   client: SquadClient,
   session: SquadSession,
   prompt: string,
-): Promise<string> {
+): Promise<void> {
   console.log();
   console.log(`${C.dim}  ─────────────────────────────────────────${C.reset}`);
 
   let receivedContent = false;
-  let contentBuffer = '';
 
   const deltaHandler: SquadSessionEventHandler = (event: SquadSessionEvent) => {
     const content = (event as any).content ?? (event as any).data?.content ?? '';
@@ -126,7 +131,6 @@ async function sendAndStream(
       if (!receivedContent) process.stdout.write(`${C.white}`);
       receivedContent = true;
       process.stdout.write(content);
-      contentBuffer += content;
     }
   };
 
@@ -143,7 +147,6 @@ async function sendAndStream(
         const text = extractContent(result);
         if (text) {
           console.log(`${C.white}${text}${C.reset}`);
-          contentBuffer = text;
         } else {
           console.log(`${C.yellow}  (Received a response but couldn't parse it.)${C.reset}`);
         }
@@ -176,8 +179,6 @@ async function sendAndStream(
     if (receivedContent) process.stdout.write(`${C.reset}\n`);
     throw err;
   }
-
-  return contentBuffer;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -187,34 +188,38 @@ async function sendAndStream(
 async function main(): Promise<void> {
   banner();
 
-  // Determine receipt folder: CLI arg or default to ./sample-receipts/
-  const folderArg = process.argv[2];
-  const receiptFolder = folderArg ?? './sample-receipts/';
+  // 1. Read the experiment — from file path (CLI arg) or typed text
+  const filePath = process.argv[2];
+  let experiment: ExperimentInput;
 
-  console.log(`${C.dim}  📂 Scanning folder: ${receiptFolder}${C.reset}`);
-
-  // Read receipt files
-  let receipts;
-  try {
-    receipts = await scanReceipts(receiptFolder);
-  } catch (err: any) {
-    console.error();
-    console.error(`${C.red}${C.bold}  Failed to read receipts.${C.reset}`);
-    console.error(`${C.yellow}  ${err?.message ?? err}${C.reset}`);
-    console.error(`${C.dim}  Usage: npm start                    (uses ./sample-receipts/)${C.reset}`);
-    console.error(`${C.dim}         npm start -- /path/to/receipts${C.reset}`);
-    process.exit(1);
+  if (filePath) {
+    console.log(`${C.magenta}  📂 Reading experiment brief from: ${filePath}${C.reset}`);
+    try {
+      experiment = await readExperimentFile(filePath);
+      console.log(`${C.green}  ✓ Loaded ${experiment.wordCount}-word brief from ${experiment.filePath}${C.reset}`);
+    } catch (err: any) {
+      console.error(`${C.red}${C.bold}  Failed to read experiment brief.${C.reset}`);
+      console.error(`${C.dim}  ${err?.message ?? err}${C.reset}`);
+      console.error();
+      console.error(`${C.yellow}  Usage:${C.reset}`);
+      console.error(`${C.dim}    npm start -- experiment-briefs/homepage-cta-test.md${C.reset}`);
+      console.error(`${C.dim}    npm start -- /path/to/experiment-brief.md${C.reset}`);
+      console.error(`${C.dim}    npm start                                          ${C.reset}${C.dim}(type hypothesis interactively)${C.reset}`);
+      process.exit(1);
+    }
+  } else {
+    console.log(`${C.yellow}  No brief file provided. You can type your experiment hypothesis directly.${C.reset}`);
+    try {
+      experiment = await readExperimentFromStdin();
+      console.log(`${C.green}  ✓ Received ${experiment.wordCount}-word hypothesis.${C.reset}`);
+    } catch (err: any) {
+      console.error(`${C.red}  ${err?.message ?? err}${C.reset}`);
+      process.exit(1);
+    }
   }
 
-  console.log(`${C.green}  ✓ Found ${receipts.length} receipt file(s): ${receipts.map(r => r.filename).join(', ')}${C.reset}`);
-
-  if (receipts.length === 0) {
-    console.log(`${C.yellow}  No receipt files found (.txt, .md, .csv, .jpg, .jpeg, .png, .gif, .bmp). Add some and try again.${C.reset}`);
-    return;
-  }
-
-  // Build the analysis prompt from receipt contents
-  const analysisPrompt = formatReceiptsForPrompt(receipts);
+  // 2. Build the experiment prompt
+  const experimentPrompt = formatExperimentForPrompt(experiment);
 
   // Suppress noisy CLI subprocess warnings
   const origStderrWrite = process.stderr.write.bind(process.stderr);
@@ -226,9 +231,9 @@ async function main(): Promise<void> {
     return origStderrWrite(chunk, ...args);
   };
 
-  // Connect to the Squad
+  // 3. Connect to the Squad
   console.log();
-  console.log(`${C.magenta}  Connecting to your expense analysis squad...${C.reset}`);
+  console.log(`${C.magenta}  Connecting to your A/B testing squad...${C.reset}`);
 
   let client: SquadClient;
   let session: SquadSession;
@@ -252,7 +257,7 @@ async function main(): Promise<void> {
     };
 
     session = await client.createSession(sessionConfig);
-    console.log(`${C.green}  ✓ Connected! Your expense analysis squad is ready.${C.reset}`);
+    console.log(`${C.green}  ✓ Connected! Your A/B testing squad is ready.${C.reset}`);
   } catch (err: any) {
     const msg = err?.message ?? String(err);
 
@@ -271,40 +276,26 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // Send receipts to the squad for analysis
-  let reportContent = '';
+  // 4. Send the experiment to the squad for planning
   try {
     console.log();
-    console.log(`${C.dim}  Sending ${receipts.length} receipt(s) to the squad for analysis...${C.reset}`);
-    reportContent = await sendAndStream(client, session, analysisPrompt);
+    console.log(`${C.dim}  Sending ${experiment.wordCount}-word brief to the squad for analysis...${C.reset}`);
+    await sendAndStream(client, session, experimentPrompt);
   } catch (err: any) {
     console.error(`${C.red}  Error: ${err?.message ?? err}${C.reset}`);
   }
 
-  // Write markdown report to disk
-  if (reportContent.length > 0) {
-    try {
-      await writeFile('expense-report.md', reportContent, 'utf-8');
-      console.log();
-      console.log(`${C.green}  📄 Report saved to expense-report.md${C.reset}`);
-    } catch (err: any) {
-      console.error(`${C.yellow}  ⚠️  Could not save report: ${err?.message ?? err}${C.reset}`);
-    }
-  }
-
-  // Closing
+  // Cleanup
   console.log();
-  console.log(`${C.green}  ✅ Expense analysis complete!${C.reset}`);
+  console.log(`${C.green}  ✅ Experiment plan complete!${C.reset}`);
   console.log();
-  console.log(`${C.cyan}  💡 This sample is just the beginning. You could extend it to:${C.reset}`);
-  console.log(`${C.dim}     • Connect to your bank's CSV export for automatic categorization${C.reset}`);
-  console.log(`${C.dim}     • Auto-generate expense reports for accounting software${C.reset}`);
-  console.log(`${C.dim}     • Track spending trends over time with scheduled runs${C.reset}`);
-  console.log(`${C.dim}     • Scan paper receipts with OCR (already built in via tesseract.js!)${C.reset}`);
-  console.log(`${C.dim}     • Break down multi-day hotel folios by day and category${C.reset}`);
+  console.log(`${C.cyan}  💡 Every great product is an experiment. Keep testing, keep learning.${C.reset}`);
   console.log();
-  console.log(`${C.yellow}  🔒 Privacy note: Receipt data was sent to the AI model for analysis${C.reset}`);
-  console.log(`${C.yellow}     but is not stored by this application. Your files were read-only.${C.reset}`);
+  console.log(`${C.dim}     This sample is just the start. You could extend it to:${C.reset}`);
+  console.log(`${C.dim}     • Connect to your analytics platform to pull real baseline metrics${C.reset}`);
+  console.log(`${C.dim}     • Monitor live experiments and trigger early stopping alerts${C.reset}`);
+  console.log(`${C.dim}     • Build an experiment history to track learnings across tests${C.reset}`);
+  console.log(`${C.dim}     • Auto-generate feature flag configs for your deployment system${C.reset}`);
   console.log();
   console.log(`${C.white}  The Squad SDK makes it easy to add tools that take real action.${C.reset}`);
   console.log(`${C.white}  See the README for ideas, or just start hacking!${C.reset}`);

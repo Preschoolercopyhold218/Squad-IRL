@@ -114,3 +114,20 @@ Sample ready for use.
 - Read-only sample — analyses issues but never modifies them
 - Build verified: `npm install && npx tsc --noEmit` passes clean
 
+### Meeting Recap & Action Item Generator Sample (meeting-recap/)
+- Text-input sample: user pastes meeting notes OR provides a file path to a transcript
+- 4 agents in squad.config.ts: Summarizer, Action Tracker, Decision Logger, Follow-Up Coordinator
+- Follows gmail/ gold standard: SquadClient, streaming via sendAndWait + message_delta, ANSI banner, extractContent helper, stderr suppression
+- Input handling via readline: paste mode (multi-line with END sentinel) or file path mode (fs.readFileSync)
+- 2 sample transcripts included: sprint-planning.md (~35 lines), product-review.md (~40 lines) — realistic with speaker names, decisions, action items
+- No Playwright dependency — text-input only pattern (same as appointment-scheduler)
+- Build verified: `npm install && npx tsc --noEmit` passes clean
+
+
+
+### 📌 Team update (2026-03-08T14:54:25Z): Meeting Recap sample uses text-input pattern (no Playwright) — decided by Kujan
+- Text-input avoids heavy recording/transcription dependencies (Whisper, ffmpeg, platform-specific audio APIs)
+- Readline + file path fallback enables universal compatibility
+- Sets pattern for future text-based samples (e.g., appointment-scheduler already uses similar approach)
+- Keeps focus on Squad's core strength: multi-agent coordination without external service dependencies
+- Meeting transcripts are inherently text — simplicity enables clean demo of squad patterns

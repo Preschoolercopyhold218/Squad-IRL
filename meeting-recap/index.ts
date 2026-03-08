@@ -1,14 +1,15 @@
-// ─── Receipt Scanner & Expense Analyzer ─────────────────────────────────────
-// Reads receipt files from a folder and processes them with a four-agent
-// financial squad (parser, categorizer, anomaly detector, report builder)
-// for a complete expense analysis.
+// ─── Meeting Recap & Action Item Generator ──────────────────────────────────
+// Paste meeting notes or point to a transcript file. A four-agent squad
+// extracts an executive summary, action items, decisions, and follow-ups.
 
+import { createInterface } from 'node:readline/promises';
+import { stdin, stdout } from 'node:process';
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { SquadClient } from '@bradygaster/squad-sdk/client';
 import type { SquadSession, SquadSessionConfig } from '@bradygaster/squad-sdk/adapter';
 import type { SquadSessionEvent, SquadSessionEventHandler } from '@bradygaster/squad-sdk/adapter';
-import { writeFile } from 'node:fs/promises';
 import squadConfig from './squad.config.js';
-import { scanReceipts, formatReceiptsForPrompt } from './receipt-reader.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ANSI helpers
@@ -28,15 +29,16 @@ const C = {
 
 function banner(): void {
   console.log();
-  console.log(`${C.cyan}${C.bold}  🧾  Receipt Scanner & Expense Analyzer${C.reset}`);
-  console.log(`${C.dim}  ─────────────────────────────────────────${C.reset}`);
-  console.log(`${C.dim}  Reads receipt files from a folder and analyzes them with AI.${C.reset}`);
-  console.log(`${C.dim}  Four specialists: Parser · Categorizer · Anomaly Detector · Report Builder${C.reset}`);
+  console.log(`${C.cyan}${C.bold}  📋  Meeting Recap & Action Item Generator${C.reset}`);
+  console.log(`${C.dim}  ─────────────────────────────────────────────${C.reset}`);
+  console.log(`${C.dim}  Paste meeting notes or provide a transcript file.${C.reset}`);
+  console.log(`${C.dim}  Four specialists: Summarizer · Action Tracker · Decision Logger · Follow-Up Coordinator${C.reset}`);
   console.log();
 }
 
 /**
  * Extract the human-readable content from a squad response.
+ * The response may be a string, or an event object with data.content.
  */
 function extractContent(result: unknown): string | null {
   if (typeof result === 'string') return result;
@@ -47,9 +49,11 @@ function extractContent(result: unknown): string | null {
   if (obj.data?.content && typeof obj.data.content === 'string') {
     return obj.data.content;
   }
+
   if (obj.content && typeof obj.content === 'string') {
     return obj.content;
   }
+
   if (obj.message && typeof obj.message === 'string') {
     return obj.message;
   }
@@ -58,12 +62,63 @@ function extractContent(result: unknown): string | null {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Input: paste notes or read from a file
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function getMeetingContent(rl: ReturnType<typeof createInterface>): Promise<string> {
+  console.log(`${C.yellow}  How would you like to provide meeting notes?${C.reset}`);
+  console.log(`${C.dim}    1. Paste notes directly (type "paste")${C.reset}`);
+  console.log(`${C.dim}    2. Provide a file path (type a path, e.g. ./sample-transcripts/sprint-planning.md)${C.reset}`);
+  console.log();
+
+  const answer = await rl.question(`${C.cyan}  Your choice: ${C.reset}`);
+  const trimmed = answer.trim();
+
+  if (trimmed.toLowerCase() === 'paste') {
+    console.log();
+    console.log(`${C.yellow}  Paste your meeting notes below.${C.reset}`);
+    console.log(`${C.dim}  When done, type "END" on a new line and press Enter.${C.reset}`);
+    console.log();
+
+    const lines: string[] = [];
+    while (true) {
+      const line = await rl.question('');
+      if (line.trim().toUpperCase() === 'END') break;
+      lines.push(line);
+    }
+
+    const content = lines.join('\n').trim();
+    if (!content) {
+      console.log(`${C.red}  No content provided. Exiting.${C.reset}`);
+      process.exit(1);
+    }
+    return content;
+  }
+
+  // Treat the input as a file path
+  const filePath = resolve(trimmed);
+  if (!existsSync(filePath)) {
+    console.error(`${C.red}  File not found: ${filePath}${C.reset}`);
+    process.exit(1);
+  }
+
+  const content = readFileSync(filePath, 'utf-8').trim();
+  if (!content) {
+    console.error(`${C.red}  File is empty: ${filePath}${C.reset}`);
+    process.exit(1);
+  }
+
+  console.log(`${C.green}  ✓ Loaded transcript from ${trimmed} (${content.length} characters)${C.reset}`);
+  return content;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Build system prompt from squad config
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function buildSystemPrompt(): string {
   const config = squadConfig;
-  const teamName = config.team?.name ?? 'Receipt Scanner & Expense Analyzer Squad';
+  const teamName = config.team?.name ?? 'Meeting Recap Squad';
   const teamDesc = config.team?.description ?? '';
   const projectCtx = config.team?.projectContext ?? '';
 
@@ -95,14 +150,17 @@ ${routingRules}
 
 ## Instructions
 
-You are a receipt analysis assistant powered by a squad of financial specialists.
-When the user provides receipt data, coordinate your specialists to provide a complete expense analysis.
-For broad requests ("analyze my receipts"), engage all specialists: parse, categorize, detect anomalies, and build a report.
-For specific requests ("categorize the restaurant receipt"), route to the right specialist.
+You are a meeting recap assistant powered by a squad of specialists.
+When the user provides meeting notes or a transcript, coordinate all four specialists to deliver a complete post-meeting package:
+1. **Executive Summary** (Summarizer): Overview, key topics, attendees, notable quotes
+2. **Action Items** (Action Tracker): Every commitment with owner, deadline, priority, and dependencies
+3. **Decisions** (Decision Logger): Every decision made with context, impact, and status
+4. **Follow-Ups** (Follow-Up Coordinator): Open questions, deferred topics, communication plan, check-in schedule
 
-Be organized, precise with numbers, and actionable. Use clear sections and visual hierarchy.
-Never fabricate receipt data — only work with what the user provides.
-When presenting results, follow the pipeline: parsing → categorization → anomaly detection → summary report.`;
+Present the recap in a clear, structured format with distinct sections.
+Be thorough — nothing should fall through the cracks.
+Never invent content — only work with what the transcript contains.
+Attribute statements to speakers when identifiable.`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -113,12 +171,11 @@ async function sendAndStream(
   client: SquadClient,
   session: SquadSession,
   prompt: string,
-): Promise<string> {
+): Promise<void> {
   console.log();
-  console.log(`${C.dim}  ─────────────────────────────────────────${C.reset}`);
+  console.log(`${C.dim}  ─────────────────────────────────────────────${C.reset}`);
 
   let receivedContent = false;
-  let contentBuffer = '';
 
   const deltaHandler: SquadSessionEventHandler = (event: SquadSessionEvent) => {
     const content = (event as any).content ?? (event as any).data?.content ?? '';
@@ -126,7 +183,6 @@ async function sendAndStream(
       if (!receivedContent) process.stdout.write(`${C.white}`);
       receivedContent = true;
       process.stdout.write(content);
-      contentBuffer += content;
     }
   };
 
@@ -143,7 +199,6 @@ async function sendAndStream(
         const text = extractContent(result);
         if (text) {
           console.log(`${C.white}${text}${C.reset}`);
-          contentBuffer = text;
         } else {
           console.log(`${C.yellow}  (Received a response but couldn't parse it.)${C.reset}`);
         }
@@ -176,8 +231,6 @@ async function sendAndStream(
     if (receivedContent) process.stdout.write(`${C.reset}\n`);
     throw err;
   }
-
-  return contentBuffer;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -187,34 +240,13 @@ async function sendAndStream(
 async function main(): Promise<void> {
   banner();
 
-  // Determine receipt folder: CLI arg or default to ./sample-receipts/
-  const folderArg = process.argv[2];
-  const receiptFolder = folderArg ?? './sample-receipts/';
+  const rl = createInterface({ input: stdin, output: stdout });
 
-  console.log(`${C.dim}  📂 Scanning folder: ${receiptFolder}${C.reset}`);
+  // 1. Get meeting content from the user
+  const meetingContent = await getMeetingContent(rl);
 
-  // Read receipt files
-  let receipts;
-  try {
-    receipts = await scanReceipts(receiptFolder);
-  } catch (err: any) {
-    console.error();
-    console.error(`${C.red}${C.bold}  Failed to read receipts.${C.reset}`);
-    console.error(`${C.yellow}  ${err?.message ?? err}${C.reset}`);
-    console.error(`${C.dim}  Usage: npm start                    (uses ./sample-receipts/)${C.reset}`);
-    console.error(`${C.dim}         npm start -- /path/to/receipts${C.reset}`);
-    process.exit(1);
-  }
-
-  console.log(`${C.green}  ✓ Found ${receipts.length} receipt file(s): ${receipts.map(r => r.filename).join(', ')}${C.reset}`);
-
-  if (receipts.length === 0) {
-    console.log(`${C.yellow}  No receipt files found (.txt, .md, .csv, .jpg, .jpeg, .png, .gif, .bmp). Add some and try again.${C.reset}`);
-    return;
-  }
-
-  // Build the analysis prompt from receipt contents
-  const analysisPrompt = formatReceiptsForPrompt(receipts);
+  // 2. Build the prompt
+  const triagePrompt = `Please provide a complete meeting recap for the following transcript. Engage all specialists — I need the executive summary, all action items, all decisions, and the follow-up plan.\n\n---\n\n${meetingContent}`;
 
   // Suppress noisy CLI subprocess warnings
   const origStderrWrite = process.stderr.write.bind(process.stderr);
@@ -226,9 +258,9 @@ async function main(): Promise<void> {
     return origStderrWrite(chunk, ...args);
   };
 
-  // Connect to the Squad
+  // 3. Connect to the Squad
   console.log();
-  console.log(`${C.magenta}  Connecting to your expense analysis squad...${C.reset}`);
+  console.log(`${C.magenta}  Connecting to your meeting recap squad...${C.reset}`);
 
   let client: SquadClient;
   let session: SquadSession;
@@ -252,7 +284,7 @@ async function main(): Promise<void> {
     };
 
     session = await client.createSession(sessionConfig);
-    console.log(`${C.green}  ✓ Connected! Your expense analysis squad is ready.${C.reset}`);
+    console.log(`${C.green}  ✓ Connected! Your meeting recap squad is ready.${C.reset}`);
   } catch (err: any) {
     const msg = err?.message ?? String(err);
 
@@ -268,46 +300,25 @@ async function main(): Promise<void> {
       console.error(`${C.red}  Connection failed: ${msg}${C.reset}`);
     }
 
+    rl.close();
     process.exit(1);
   }
 
-  // Send receipts to the squad for analysis
-  let reportContent = '';
+  // 4. Send the meeting notes to the squad
   try {
     console.log();
-    console.log(`${C.dim}  Sending ${receipts.length} receipt(s) to the squad for analysis...${C.reset}`);
-    reportContent = await sendAndStream(client, session, analysisPrompt);
+    console.log(`${C.dim}  Processing meeting transcript...${C.reset}`);
+    await sendAndStream(client, session, triagePrompt);
   } catch (err: any) {
     console.error(`${C.red}  Error: ${err?.message ?? err}${C.reset}`);
   }
 
-  // Write markdown report to disk
-  if (reportContent.length > 0) {
-    try {
-      await writeFile('expense-report.md', reportContent, 'utf-8');
-      console.log();
-      console.log(`${C.green}  📄 Report saved to expense-report.md${C.reset}`);
-    } catch (err: any) {
-      console.error(`${C.yellow}  ⚠️  Could not save report: ${err?.message ?? err}${C.reset}`);
-    }
-  }
-
-  // Closing
+  // Cleanup
   console.log();
-  console.log(`${C.green}  ✅ Expense analysis complete!${C.reset}`);
+  console.log(`${C.green}  ✅ Meeting recap complete!${C.reset}`);
   console.log();
-  console.log(`${C.cyan}  💡 This sample is just the beginning. You could extend it to:${C.reset}`);
-  console.log(`${C.dim}     • Connect to your bank's CSV export for automatic categorization${C.reset}`);
-  console.log(`${C.dim}     • Auto-generate expense reports for accounting software${C.reset}`);
-  console.log(`${C.dim}     • Track spending trends over time with scheduled runs${C.reset}`);
-  console.log(`${C.dim}     • Scan paper receipts with OCR (already built in via tesseract.js!)${C.reset}`);
-  console.log(`${C.dim}     • Break down multi-day hotel folios by day and category${C.reset}`);
-  console.log();
-  console.log(`${C.yellow}  🔒 Privacy note: Receipt data was sent to the AI model for analysis${C.reset}`);
-  console.log(`${C.yellow}     but is not stored by this application. Your files were read-only.${C.reset}`);
-  console.log();
-  console.log(`${C.white}  The Squad SDK makes it easy to add tools that take real action.${C.reset}`);
-  console.log(`${C.white}  See the README for ideas, or just start hacking!${C.reset}`);
+  console.log(`${C.cyan}  💡 Every meeting deserves a paper trail. Now nothing falls through the cracks.${C.reset}`);
+  console.log(`${C.dim}     Share the recap, assign the action items, and move forward with clarity.${C.reset}`);
   console.log();
 
   try {
@@ -317,6 +328,8 @@ async function main(): Promise<void> {
   try {
     await client.disconnect();
   } catch { /* best effort */ }
+
+  rl.close();
 }
 
 main().catch((err) => {

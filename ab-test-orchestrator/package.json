@@ -1,0 +1,17 @@
+{
+  "name": "ab-test-orchestrator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Squad-powered A/B test planning demo — provide an experiment hypothesis and get a complete test plan from a team of AI specialists.",
+  "type": "module",
+  "scripts": {
+    "start": "npx tsx index.ts"
+  },
+  "dependencies": {
+    "@bradygaster/squad-sdk": "^0.8.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4",
+    "typescript": "^5.7.0"
+  }
+}

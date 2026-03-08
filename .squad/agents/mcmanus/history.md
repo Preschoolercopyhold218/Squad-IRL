@@ -1096,3 +1096,52 @@ Multi-agent build of Rock-Paper-Scissors game with 10 AI strategies, Docker infr
 - All four agents have clear domain boundaries matching the gmail/ classifier/summarizer/advisor/ranker pattern
 
 **Verified:** `npm install` + `npx tsc --noEmit` pass clean.
+
+
+### 2026-03-08: Social Media Content Manager sample — full Squad SDK implementation
+
+**Status:** Complete. Built text-input based social media content generation sample following gmail/ and appointment-scheduler patterns.
+
+**What was built (7 files):**
+1. squad.config.ts — 4 agents: Content Creator, Platform Optimizer, Timing Strategist, Engagement Monitor
+2. index.ts — Main orchestrator with readline input, banner, Squad client connection, streaming response, closing inspiration
+3. content-input.ts — User input handler supporting typed themes or content brief files
+4. content-briefs/product-launch.md — Sample brief for AI-powered code review tool launch
+5. content-briefs/weekly-tech-content.md — Sample brief for cloud infrastructure weekly content
+6. package.json — Dependencies: @bradygaster/squad-sdk (no Playwright needed)
+7. README.md — Usage guide, what it does, extension ideas
+
+**Key design decisions:**
+- **Text-input pattern:** User types content theme OR loads from .md brief file (no Playwright, no browser scraping)
+- **4 focused agents:** Content Creator (3 post concepts) → Platform Optimizer (Twitter/LinkedIn/Instagram versions) → Timing Strategist (posting windows) → Engagement Monitor (response templates, escalation triggers)
+- **Output format:** Copy-paste ready content for scheduling tools (Buffer, Hootsuite, Later)
+- **Sample briefs:** 2 realistic briefs included for out-of-the-box demo (product launch, weekly tech content)
+- **Read-only generation:** Doesn't post anything — users review and schedule manually
+
+**Agent charter approach:**
+- Each agent's charter is comprehensive, teaching Squad what excellence looks like in that domain
+- Content Creator: hook writing, storytelling patterns, variation strategy, emotional resonance
+- Platform Optimizer: character limits, hashtag strategy per platform, tone calibration, native formatting
+- Timing Strategist: algorithm knowledge, audience behavior patterns, timezone optimization, platform-specific wisdom
+- Engagement Monitor: response prioritization, escalation triggers, community management, conversation threading
+
+**Extension ideas provided (in closing message):**
+- Connect to Twitter/LinkedIn/Instagram APIs for direct posting
+- Integrate with Buffer or Hootsuite for automated scheduling
+- Track post performance and feed analytics back for optimization
+- Generate image suggestions using DALL-E or Midjourney prompts
+
+**Verified:** 
+pm install + 
+px tsc --noEmit pass clean with no errors.
+
+**Pattern consistency:** Followed gmail/ structure exactly (ANSI colors, banner, extractContent, buildSystemPrompt, sendAndStream, error handling for missing Copilot CLI). This makes samples easy to compare and learn from.
+
+**Learnings:**
+1. **Text-input + file pattern works well for content creation:** Users can quickly type a theme OR use prepared briefs for consistent brand messaging. The content-briefs/ directory becomes a reusable content library.
+2. **4-agent sweet spot:** Content Creator → Platform Optimizer → Timing Strategist → Engagement Monitor covers the full workflow without over-specialization. Each agent has clear boundaries and teachable expertise.
+3. **Charter depth matters:** The Platform Optimizer charter specifies exact character limits, hashtag counts, and tone per platform. This level of detail guides Squad to deliver platform-native content, not generic cross-posts.
+4. **Sample briefs show Squad's power:** The product-launch.md brief is 2KB but contains audience, key messages, proof points, tone guidance. Squad transforms this into 9+ platform-specific posts. That's the value prop.
+5. **DevRel sample philosophy:** Show the pattern (text input → Squad orchestration → formatted output), provide working examples (2 briefs), suggest next steps (API integration, analytics, scheduling). Users learn by running, then extending.
+
+**Message for team:** This completes the "Social Media Content Manager" sample from SAMPLE-IDEAS.md (#3). Pattern matches gmail/ and appointment-scheduler for consistency. Ready for demo/docs.

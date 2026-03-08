@@ -26,6 +26,15 @@
 
 ## Learnings
 
+### A/B Test Orchestrator sample (2026-03-08)
+**Status:** Built — all 7 files + 2 sample briefs created. TypeScript compiles clean (zero errors).
+- **Files:** squad.config.ts (4 agents), index.ts (file/text input orchestrator), experiment-reader.ts (file reader module), package.json, tsconfig.json, README.md
+- **Sample briefs:** homepage-cta-test.md (CTA button color test, ~45k weekly visitors), pricing-page-layout.md (tiered cards vs. comparison table, ~12k weekly visitors)
+- **Pattern:** Follows contract-reviewer file-input pattern (CLI arg or stdin). No Playwright needed.
+- **Agents:** Experiment Designer, Traffic Strategist, Metrics Analyst, Results Interpreter — focused 4-agent squad.
+- **Verification:** `npx tsc --noEmit` passes with zero errors. npm install clean.
+
+
 ### Knock-knock Docker fix (2026-03-03)
 **Status:** Fixed — docker-compose build + up now works. Committed to `migration` branch.
 - **Root cause 1:** SDK `package.json` has `"prepare": "npm run build"` which runs `tsc` during `npm install` of the `file:` dependency. Alpine container doesn't have `tsc`. Fix: strip `prepare`/`prepublishOnly` from SDK package.json inside Dockerfile before `npm install`.
