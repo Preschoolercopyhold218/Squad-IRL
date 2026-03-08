@@ -4,7 +4,7 @@
 
 ## What Is This?
 
-Tired of automation being hard? Squad makes it simple. This repo contains 18 working samples showing how Squad agent teams solve everyday problems — no coding required.
+Tired of automation being hard? Squad makes it simple. This repo contains 19 working samples showing how Squad agent teams solve everyday problems — no coding required.
 
 Each sample is a **self-contained TypeScript project** with a team of AI agents. All you do is describe your problem in plain English, and Squad builds the code. No API keys. No boilerplate. Real algorithms, real patterns, real problems solved.
 
@@ -17,7 +17,7 @@ npm install
 npm start
 ```
 
-## The 18 Samples
+## The 19 Samples
 
 ### 💬 Text & Conversation Input
 
@@ -43,6 +43,7 @@ These analyze web data, listings, or user activity to provide recommendations.
 | [linkedin-monitor](linkedin-monitor/) | Monitors LinkedIn notifications to classify, score by priority, recommend actions, and surface engagement opportunities with direct URLs |
 | [price-monitor](price-monitor/) | Analyzes scraped product prices to score deals, recommend buy/wait/skip decisions, and highlight savings opportunities |
 | [real-estate-analyzer](real-estate-analyzer/) | Evaluates property listings for investment potential with financial modeling, neighborhood scoring, and opportunity ranking |
+| [mtg-commander-deck-builder](mtg-commander-deck-builder/) | Scrapes EDHREC for card recommendations, builds 100-card Commander decks, saves to disk, and supports conversational follow-up modifications |
 | [realtor-sales-package](realtor-sales-package/) | Builds professional CMAs (Comparative Market Analysis) with market trends, comparable sales, and pricing recommendations for realtors |
 
 ### 📁 File & Data Analysis

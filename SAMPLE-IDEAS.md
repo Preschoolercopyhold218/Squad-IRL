@@ -310,7 +310,7 @@
 
 ---
 
-## 19. 🚧 MTG Commander Deck Builder (Playwright)
+## 19. ✅ MTG Commander Deck Builder (Playwright)
 **Problem:** Magic: The Gathering Commander players spend hours researching cards across multiple sites (TCGPlayer, EDHREC) to build 100-card Commander decks. Finding the right synergies, maintaining proper mana curves, and balancing land counts is tedious and error-prone.
 
 **How it works:**
