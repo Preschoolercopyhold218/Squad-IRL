@@ -58,15 +58,8 @@ export async function scrapeListings(page: Page): Promise<PropertyListing[]> {
   // Give the page time to finish rendering dynamic content
   await page.waitForTimeout(3000);
 
-  const listings = await page.evaluate(() => {
-    const results: {
-      address: string;
-      price: string;
-      beds: string;
-      baths: string;
-      sqft: string;
-      details: string;
-    }[] = [];
+  const listings = await page.evaluate(`(() => {
+    const results = [];
 
     // ════════════════════════════════════════════════════════════════════════
     // Strategy 1: Redfin listing cards
@@ -87,7 +80,7 @@ export async function scrapeListings(page: Page): Promise<PropertyListing[]> {
 
       // Stats: beds, baths, sqft — often in a stats row
       const statsEls = card.querySelectorAll('.HomeStatsV2 .stats, .bp-Homecard__Stats--item, .HomeStatsV2 span');
-      const statsTexts: string[] = [];
+      const statsTexts = [];
       for (const s of statsEls) {
         const t = (s?.textContent?.trim() ?? '');
         if (t) statsTexts.push(t);
@@ -98,16 +91,16 @@ export async function scrapeListings(page: Page): Promise<PropertyListing[]> {
       let baths = '';
       let sqft = '';
 
-      const bedMatch = statsLine.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed|BR)/i);
-      const bathMatch = statsLine.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath)/i);
-      const sqftMatch = statsLine.match(/([\d,]+)\s*(?:sq\s*ft|sqft)/i);
+      const bedMatch = statsLine.match(/(\\d+(?:\\.\\d+)?)\\s*(?:bd|bed|BR)/i);
+      const bathMatch = statsLine.match(/(\\d+(?:\\.\\d+)?)\\s*(?:ba|bath)/i);
+      const sqftMatch = statsLine.match(/([\\d,]+)\\s*(?:sq\\s*ft|sqft)/i);
 
-      if (bedMatch) beds = bedMatch[1]!;
-      if (bathMatch) baths = bathMatch[1]!;
-      if (sqftMatch) sqft = sqftMatch[1]!;
+      if (bedMatch) beds = bedMatch[1];
+      if (bathMatch) baths = bathMatch[1];
+      if (sqftMatch) sqft = sqftMatch[1];
 
       // Collect remaining details
-      const detailParts: string[] = [];
+      const detailParts = [];
       const typeEl = card.querySelector('.HomeStatsV2 .propertyType, .property-type');
       if (typeEl) detailParts.push(typeEl?.textContent?.trim() ?? '');
       const brokerEl = card.querySelector('.broker, .branding');
@@ -151,13 +144,13 @@ export async function scrapeListings(page: Page): Promise<PropertyListing[]> {
         let baths = '';
         let sqft = '';
 
-        const bedMatch = detailText.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed|bds|br)/i);
-        const bathMatch = detailText.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath|bas)/i);
-        const sqftMatch = detailText.match(/([\d,]+)\s*(?:sq\s*ft|sqft)/i);
+        const bedMatch = detailText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:bd|bed|bds|br)/i);
+        const bathMatch = detailText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:ba|bath|bas)/i);
+        const sqftMatch = detailText.match(/([\\d,]+)\\s*(?:sq\\s*ft|sqft)/i);
 
-        if (bedMatch) beds = bedMatch[1]!;
-        if (bathMatch) baths = bathMatch[1]!;
-        if (sqftMatch) sqft = sqftMatch[1]!;
+        if (bedMatch) beds = bedMatch[1];
+        if (bathMatch) baths = bathMatch[1];
+        if (sqftMatch) sqft = sqftMatch[1];
 
         if (address || price) {
           results.push({
@@ -181,15 +174,15 @@ export async function scrapeListings(page: Page): Promise<PropertyListing[]> {
       );
 
       for (const card of genericCards) {
-        const fullText = (card as HTMLElement).innerText?.trim() ?? '';
+        const fullText = card.innerText?.trim() ?? '';
         if (fullText && fullText.length > 20) {
-          const priceMatch = fullText.match(/\$[\d,]+(?:\.\d+)?/);
-          const bedMatch = fullText.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed|BR)/i);
-          const bathMatch = fullText.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath)/i);
-          const sqftMatch = fullText.match(/([\d,]+)\s*(?:sq\s*ft|sqft)/i);
+          const priceMatch = fullText.match(/\\$[\\d,]+(?:\\.\\d+)?/);
+          const bedMatch = fullText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:bd|bed|BR)/i);
+          const bathMatch = fullText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:ba|bath)/i);
+          const sqftMatch = fullText.match(/([\\d,]+)\\s*(?:sq\\s*ft|sqft)/i);
 
           results.push({
-            address: fullText.split('\n')[0]?.trim().slice(0, 120) ?? '(unknown)',
+            address: fullText.split('\\n')[0]?.trim().slice(0, 120) ?? '(unknown)',
             price: priceMatch?.[0] ?? '(price not found)',
             beds: bedMatch?.[1] ?? '',
             baths: bathMatch?.[1] ?? '',
@@ -201,7 +194,7 @@ export async function scrapeListings(page: Page): Promise<PropertyListing[]> {
     }
 
     return results;
-  });
+  })()`) as PropertyListing[];
 
   return listings;
 }

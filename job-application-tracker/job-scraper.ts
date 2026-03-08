@@ -85,15 +85,9 @@ export async function scrapeJobListings(page: Page): Promise<JobListing[]> {
 
   const currentUrl = page.url();
 
-  const listings = await page.evaluate((pageUrl: string) => {
-    const results: {
-      title: string;
-      company: string;
-      location: string;
-      salary: string;
-      description: string;
-      url: string;
-    }[] = [];
+  const listings = await page.evaluate(`(() => {
+    const pageUrl = ${JSON.stringify(currentUrl)};
+    const results = [];
 
     // ── Strategy 1: Indeed ──
     const indeedCards = document.querySelectorAll('.job_seen_beacon, .jobsearch-ResultsList > li, .resultContent');
@@ -136,7 +130,7 @@ export async function scrapeJobListings(page: Page): Promise<JobListing[]> {
           if (href.startsWith('http')) {
             url = href;
           } else if (href.startsWith('/')) {
-            url = `https://www.indeed.com${href}`;
+            url = \`https://www.indeed.com\${href}\`;
           }
         }
 
@@ -186,7 +180,7 @@ export async function scrapeJobListings(page: Page): Promise<JobListing[]> {
           if (href.startsWith('http')) {
             url = href;
           } else if (href.startsWith('/')) {
-            url = `https://www.linkedin.com${href}`;
+            url = \`https://www.linkedin.com\${href}\`;
           }
         }
 
@@ -203,19 +197,19 @@ export async function scrapeJobListings(page: Page): Promise<JobListing[]> {
         '[class*="jobCard"], article[class*="job"], [data-testid*="job"]'
       );
       for (const card of genericCards) {
-        const el = card as HTMLElement;
+        const el = card;
         const headingEl = el.querySelector('h2, h3, h4, a[href]');
         const title = headingEl?.textContent?.trim() ?? '';
 
         const allText = el.innerText ?? '';
-        const lines = allText.split('\n').map((l: string) => l.trim()).filter(Boolean);
+        const lines = allText.split('\\n').map((l) => l.trim()).filter(Boolean);
 
         const company = lines[1] ?? '';
-        const location = lines.find((l: string) =>
-          /\b(remote|hybrid|onsite|city|state|,\s*[A-Z]{2})\b/i.test(l)
+        const location = lines.find((l) =>
+          /\\b(remote|hybrid|onsite|city|state|,\\s*[A-Z]{2})\\b/i.test(l)
         ) ?? '';
-        const salary = lines.find((l: string) =>
-          /\$[\d,]+|salary|per\s+(hour|year|annum)/i.test(l)
+        const salary = lines.find((l) =>
+          /\\$[\\d,]+|salary|per\\s+(hour|year|annum)/i.test(l)
         ) ?? '';
         const description = lines.slice(2, 5).join(' ').slice(0, 200);
 
@@ -226,7 +220,7 @@ export async function scrapeJobListings(page: Page): Promise<JobListing[]> {
           if (href.startsWith('http')) {
             url = href;
           } else if (href.startsWith('/')) {
-            try { url = new URL(href, window.location.origin).href; } catch { /* skip */ }
+            try { url = new URL(href, window.location.origin).href; } catch (e) { /* skip */ }
           }
         }
 
@@ -242,7 +236,7 @@ export async function scrapeJobListings(page: Page): Promise<JobListing[]> {
         'article, [role="listitem"], li[class*="result"], div[class*="result"]'
       );
       for (const card of allCards) {
-        const text = (card as HTMLElement).innerText?.trim() ?? '';
+        const text = card.innerText?.trim() ?? '';
         if (text && text.length > 30 && text.length < 2000) {
           const linkEl = card.querySelector('a[href]');
           let url = '';
@@ -251,7 +245,7 @@ export async function scrapeJobListings(page: Page): Promise<JobListing[]> {
             if (href.startsWith('http')) {
               url = href;
             } else if (href.startsWith('/')) {
-              try { url = new URL(href, window.location.origin).href; } catch { /* skip */ }
+              try { url = new URL(href, window.location.origin).href; } catch (e) { /* skip */ }
             }
           }
 
@@ -268,7 +262,7 @@ export async function scrapeJobListings(page: Page): Promise<JobListing[]> {
     }
 
     return results;
-  }, currentUrl);
+  })()`) as JobListing[];
 
   return listings;
 }

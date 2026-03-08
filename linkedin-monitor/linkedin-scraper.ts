@@ -74,15 +74,8 @@ export async function scrapeNotifications(page: Page): Promise<LinkedInItem[]> {
   // Wait for dynamic content to load
   await page.waitForTimeout(3000);
 
-  const items = await page.evaluate(() => {
-    const results: {
-      from: string;
-      preview: string;
-      timestamp: string;
-      url: string;
-      unread: boolean;
-      actionText: string;
-    }[] = [];
+  const items = await page.evaluate(`(() => {
+    const results = [];
 
     // Strategy 1: LinkedIn notification cards (nt-card class or similar containers)
     const cardSelectors = [
@@ -93,7 +86,7 @@ export async function scrapeNotifications(page: Page): Promise<LinkedInItem[]> {
       'div.nt-card__text-content',
     ];
 
-    let cards: Element[] = [];
+    let cards = [];
     for (const sel of cardSelectors) {
       const found = document.querySelectorAll(sel);
       if (found.length > 0) {
@@ -113,7 +106,7 @@ export async function scrapeNotifications(page: Page): Promise<LinkedInItem[]> {
     }
 
     for (const card of cards) {
-      const el = card as HTMLElement;
+      const el = card;
 
       // Extract the primary text content
       const textEl =
@@ -152,7 +145,7 @@ export async function scrapeNotifications(page: Page): Promise<LinkedInItem[]> {
         if (href.startsWith('http')) {
           url = href;
         } else if (href.startsWith('/')) {
-          url = `https://www.linkedin.com${href}`;
+          url = \`https://www.linkedin.com\${href}\`;
         }
       }
 
@@ -179,7 +172,7 @@ export async function scrapeNotifications(page: Page): Promise<LinkedInItem[]> {
         'section[class*="notification"] li, .scaffold-layout__list li, [role="list"] [role="listitem"]'
       );
       for (const item of genericItems) {
-        const text = (item as HTMLElement).innerText?.trim() ?? '';
+        const text = item.innerText?.trim() ?? '';
         if (text && text.length > 15) {
           const linkEl = item.querySelector('a[href]');
           let url = '';
@@ -188,7 +181,7 @@ export async function scrapeNotifications(page: Page): Promise<LinkedInItem[]> {
             url = href.startsWith('http')
               ? href
               : href.startsWith('/')
-                ? `https://www.linkedin.com${href}`
+                ? \`https://www.linkedin.com\${href}\`
                 : '';
           }
 
@@ -205,7 +198,14 @@ export async function scrapeNotifications(page: Page): Promise<LinkedInItem[]> {
     }
 
     return results;
-  });
+  })()`) as {
+    from: string;
+    preview: string;
+    timestamp: string;
+    url: string;
+    unread: boolean;
+    actionText: string;
+  }[];
 
   return items.map((item) => {
     const { category, type } = categoriseNotification(item.actionText);
@@ -234,14 +234,8 @@ export async function scrapeMessages(page: Page): Promise<LinkedInItem[]> {
   // Wait for dynamic content to load
   await page.waitForTimeout(3000);
 
-  const items = await page.evaluate(() => {
-    const results: {
-      from: string;
-      preview: string;
-      timestamp: string;
-      url: string;
-      unread: boolean;
-    }[] = [];
+  const items = await page.evaluate(`(() => {
+    const results = [];
 
     // Strategy 1: messaging thread list items
     const threadSelectors = [
@@ -251,7 +245,7 @@ export async function scrapeMessages(page: Page): Promise<LinkedInItem[]> {
       '.msg-conversations-container__convo-item-link',
     ];
 
-    let threads: Element[] = [];
+    let threads = [];
     for (const sel of threadSelectors) {
       const found = document.querySelectorAll(sel);
       if (found.length > 0) {
@@ -271,7 +265,7 @@ export async function scrapeMessages(page: Page): Promise<LinkedInItem[]> {
     }
 
     for (const thread of threads) {
-      const el = thread as HTMLElement;
+      const el = thread;
 
       // Sender name
       const nameEl =
@@ -309,7 +303,7 @@ export async function scrapeMessages(page: Page): Promise<LinkedInItem[]> {
         if (href.startsWith('http')) {
           url = href;
         } else if (href.startsWith('/')) {
-          url = `https://www.linkedin.com${href}`;
+          url = \`https://www.linkedin.com\${href}\`;
         }
       }
 
@@ -331,7 +325,7 @@ export async function scrapeMessages(page: Page): Promise<LinkedInItem[]> {
         '[class*="messaging"] [role="listitem"], [class*="msg"] li'
       );
       for (const item of genericItems) {
-        const text = (item as HTMLElement).innerText?.trim() ?? '';
+        const text = item.innerText?.trim() ?? '';
         if (text && text.length > 10) {
           const linkEl = item.querySelector('a[href]');
           let url = '';
@@ -340,7 +334,7 @@ export async function scrapeMessages(page: Page): Promise<LinkedInItem[]> {
             url = href.startsWith('http')
               ? href
               : href.startsWith('/')
-                ? `https://www.linkedin.com${href}`
+                ? \`https://www.linkedin.com\${href}\`
                 : '';
           }
 
@@ -356,7 +350,13 @@ export async function scrapeMessages(page: Page): Promise<LinkedInItem[]> {
     }
 
     return results;
-  });
+  })()`) as {
+    from: string;
+    preview: string;
+    timestamp: string;
+    url: string;
+    unread: boolean;
+  }[];
 
   return items.map((item) => ({
     type: 'message' as const,

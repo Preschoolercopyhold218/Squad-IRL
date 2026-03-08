@@ -50,14 +50,8 @@ export async function scrapeInbox(page: Page): Promise<GmailEmail[]> {
   // Give Gmail a moment to finish rendering dynamic content
   await page.waitForTimeout(2000);
 
-  const emails = await page.evaluate(() => {
-    const results: {
-      sender: string;
-      subject: string;
-      snippet: string;
-      unread: boolean;
-      labels: string[];
-    }[] = [];
+  const emails = await page.evaluate(`(() => {
+    const results = [];
 
     // Gmail inbox rows are <tr> elements with class "zA"
     const rows = document.querySelectorAll('tr.zA');
@@ -88,14 +82,14 @@ export async function scrapeInbox(page: Page): Promise<GmailEmail[]> {
       const snippetEl = row.querySelector('.y2');
       let snippet = snippetEl?.textContent?.trim() ?? '';
       // Strip the leading dash separator Gmail sometimes includes
-      snippet = snippet.replace(/^[\s–—-]+/, '').trim();
+      snippet = snippet.replace(/^[\\s–—-]+/, '').trim();
 
       // ── Unread ──
       const unread = row.classList.contains('zE');
 
       // ── Labels ──
       const labelEls = row.querySelectorAll('.av');
-      const labels: string[] = [];
+      const labels = [];
       for (const lbl of labelEls) {
         const text = lbl.textContent?.trim();
         if (text) labels.push(text);
@@ -111,7 +105,7 @@ export async function scrapeInbox(page: Page): Promise<GmailEmail[]> {
     if (results.length === 0) {
       const allRows = document.querySelectorAll('tr[role="row"], div[role="row"], tr.zA');
       for (const row of allRows) {
-        const text = (row as HTMLElement).innerText?.trim() ?? '';
+        const text = row.innerText?.trim() ?? '';
         if (text && text.length > 10) {
           results.push({
             sender: '',
@@ -125,7 +119,7 @@ export async function scrapeInbox(page: Page): Promise<GmailEmail[]> {
     }
 
     return results;
-  });
+  })()`) as GmailEmail[];
 
   return emails;
 }

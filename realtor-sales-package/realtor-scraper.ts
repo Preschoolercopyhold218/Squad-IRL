@@ -80,19 +80,8 @@ export async function navigateToZillow(page: Page, searchQuery: string): Promise
 export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
   await page.waitForTimeout(3000);
 
-  const listings = await page.evaluate(() => {
-    const results: {
-      source: 'redfin';
-      address: string;
-      price: string;
-      beds: string;
-      baths: string;
-      sqft: string;
-      daysOnMarket: string;
-      pricePerSqft: string;
-      status: string;
-      details: string;
-    }[] = [];
+  const listings = await page.evaluate(`(() => {
+    const results = [];
 
     // Strategy 1: Redfin HomeCard selectors
     const cards = document.querySelectorAll(
@@ -111,7 +100,7 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
 
       // Stats row: beds, baths, sqft
       const statsEls = card.querySelectorAll('.HomeStatsV2 .stats, .bp-Homecard__Stats--item, .HomeStatsV2 span');
-      const statsTexts: string[] = [];
+      const statsTexts = [];
       for (const s of statsEls) {
         const t = (s?.textContent?.trim() ?? '');
         if (t) statsTexts.push(t);
@@ -122,21 +111,21 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
       let baths = '';
       let sqft = '';
 
-      const bedMatch = statsLine.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed|BR)/i);
-      const bathMatch = statsLine.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath)/i);
-      const sqftMatch = statsLine.match(/([\d,]+)\s*(?:sq\s*ft|sqft)/i);
+      const bedMatch = statsLine.match(/(\\d+(?:\\.\\d+)?)\\s*(?:bd|bed|BR)/i);
+      const bathMatch = statsLine.match(/(\\d+(?:\\.\\d+)?)\\s*(?:ba|bath)/i);
+      const sqftMatch = statsLine.match(/([\\d,]+)\\s*(?:sq\\s*ft|sqft)/i);
 
-      if (bedMatch) beds = bedMatch[1]!;
-      if (bathMatch) baths = bathMatch[1]!;
-      if (sqftMatch) sqft = sqftMatch[1]!;
+      if (bedMatch) beds = bedMatch[1];
+      if (bathMatch) baths = bathMatch[1];
+      if (sqftMatch) sqft = sqftMatch[1];
 
       // Days on market
       let daysOnMarket = '';
       const domEl = card.querySelector('.dom, .timeOnRedfin, [data-rf-test-id="abp-dom"]');
       if (domEl) {
         const domText = (domEl?.textContent?.trim() ?? '');
-        const domMatch = domText.match(/(\d+)\s*(?:day|d)/i);
-        if (domMatch) daysOnMarket = domMatch[1]!;
+        const domMatch = domText.match(/(\\d+)\\s*(?:day|d)/i);
+        if (domMatch) daysOnMarket = domMatch[1];
       }
 
       // Price per sqft
@@ -150,7 +139,7 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
       if (statusEl) status = (statusEl?.textContent?.trim() ?? '');
 
       // Additional details
-      const detailParts: string[] = [];
+      const detailParts = [];
       const typeEl = card.querySelector('.HomeStatsV2 .propertyType, .property-type');
       if (typeEl) detailParts.push(typeEl?.textContent?.trim() ?? '');
       const brokerEl = card.querySelector('.broker, .branding');
@@ -176,17 +165,17 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
     if (results.length === 0) {
       const tableRows = document.querySelectorAll('.tableList .tableRow, .ReactDataTable .rt-tr');
       for (const row of tableRows) {
-        const fullText = (row as HTMLElement).innerText?.trim() ?? '';
+        const fullText = row.innerText?.trim() ?? '';
         if (fullText && fullText.length > 20) {
-          const priceMatch = fullText.match(/\$[\d,]+(?:\.\d+)?/);
-          const bedMatch = fullText.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed|BR)/i);
-          const bathMatch = fullText.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath)/i);
-          const sqftMatch = fullText.match(/([\d,]+)\s*(?:sq\s*ft|sqft)/i);
-          const domMatch = fullText.match(/(\d+)\s*(?:day|d)\s*(?:on|ago)/i);
+          const priceMatch = fullText.match(/\\$[\\d,]+(?:\\.\\d+)?/);
+          const bedMatch = fullText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:bd|bed|BR)/i);
+          const bathMatch = fullText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:ba|bath)/i);
+          const sqftMatch = fullText.match(/([\\d,]+)\\s*(?:sq\\s*ft|sqft)/i);
+          const domMatch = fullText.match(/(\\d+)\\s*(?:day|d)\\s*(?:on|ago)/i);
 
           results.push({
             source: 'redfin',
-            address: fullText.split('\n')[0]?.trim().slice(0, 120) ?? '(unknown)',
+            address: fullText.split('\\n')[0]?.trim().slice(0, 120) ?? '(unknown)',
             price: priceMatch?.[0] ?? '(price not found)',
             beds: bedMatch?.[1] ?? '',
             baths: bathMatch?.[1] ?? '',
@@ -206,16 +195,16 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
         '[class*="listing"], [class*="property"], [class*="home-card"], [class*="HomeCard"]'
       );
       for (const card of genericCards) {
-        const fullText = (card as HTMLElement).innerText?.trim() ?? '';
+        const fullText = card.innerText?.trim() ?? '';
         if (fullText && fullText.length > 20) {
-          const priceMatch = fullText.match(/\$[\d,]+(?:\.\d+)?/);
-          const bedMatch = fullText.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed|BR)/i);
-          const bathMatch = fullText.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath)/i);
-          const sqftMatch = fullText.match(/([\d,]+)\s*(?:sq\s*ft|sqft)/i);
+          const priceMatch = fullText.match(/\\$[\\d,]+(?:\\.\\d+)?/);
+          const bedMatch = fullText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:bd|bed|BR)/i);
+          const bathMatch = fullText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:ba|bath)/i);
+          const sqftMatch = fullText.match(/([\\d,]+)\\s*(?:sq\\s*ft|sqft)/i);
 
           results.push({
             source: 'redfin',
-            address: fullText.split('\n')[0]?.trim().slice(0, 120) ?? '(unknown)',
+            address: fullText.split('\\n')[0]?.trim().slice(0, 120) ?? '(unknown)',
             price: priceMatch?.[0] ?? '(price not found)',
             beds: bedMatch?.[1] ?? '',
             baths: bathMatch?.[1] ?? '',
@@ -230,7 +219,7 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
     }
 
     return results;
-  });
+  })()`) as PropertyData[];
 
   return listings;
 }
@@ -242,19 +231,8 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
 export async function scrapeZillow(page: Page): Promise<PropertyData[]> {
   await page.waitForTimeout(3000);
 
-  const listings = await page.evaluate(() => {
-    const results: {
-      source: 'zillow';
-      address: string;
-      price: string;
-      beds: string;
-      baths: string;
-      sqft: string;
-      daysOnMarket: string;
-      pricePerSqft: string;
-      status: string;
-      details: string;
-    }[] = [];
+  const listings = await page.evaluate(`(() => {
+    const results = [];
 
     // Strategy 1: Zillow property cards
     const cards = document.querySelectorAll(
@@ -279,21 +257,21 @@ export async function scrapeZillow(page: Page): Promise<PropertyData[]> {
       let baths = '';
       let sqft = '';
 
-      const bedMatch = detailText.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed|bds|br)/i);
-      const bathMatch = detailText.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath|bas)/i);
-      const sqftMatch = detailText.match(/([\d,]+)\s*(?:sq\s*ft|sqft)/i);
+      const bedMatch = detailText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:bd|bed|bds|br)/i);
+      const bathMatch = detailText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:ba|bath|bas)/i);
+      const sqftMatch = detailText.match(/([\\d,]+)\\s*(?:sq\\s*ft|sqft)/i);
 
-      if (bedMatch) beds = bedMatch[1]!;
-      if (bathMatch) baths = bathMatch[1]!;
-      if (sqftMatch) sqft = sqftMatch[1]!;
+      if (bedMatch) beds = bedMatch[1];
+      if (bathMatch) baths = bathMatch[1];
+      if (sqftMatch) sqft = sqftMatch[1];
 
       // Days on Zillow
       let daysOnMarket = '';
       const domEl = card.querySelector('.days-on-zillow, [data-test="days-on-zillow"]');
       if (domEl) {
         const domText = (domEl?.textContent?.trim() ?? '');
-        const domMatch = domText.match(/(\d+)\s*(?:day|d)/i);
-        if (domMatch) daysOnMarket = domMatch[1]!;
+        const domMatch = domText.match(/(\\d+)\\s*(?:day|d)/i);
+        if (domMatch) daysOnMarket = domMatch[1];
       }
 
       // Status badge
@@ -324,17 +302,17 @@ export async function scrapeZillow(page: Page): Promise<PropertyData[]> {
       );
 
       for (const item of listItems) {
-        const fullText = (item as HTMLElement).innerText?.trim() ?? '';
+        const fullText = item.innerText?.trim() ?? '';
         if (fullText && fullText.length > 20) {
-          const priceMatch = fullText.match(/\$[\d,]+(?:\.\d+)?/);
-          const bedMatch = fullText.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed|bds|br)/i);
-          const bathMatch = fullText.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath|bas)/i);
-          const sqftMatch = fullText.match(/([\d,]+)\s*(?:sq\s*ft|sqft)/i);
-          const domMatch = fullText.match(/(\d+)\s*(?:day|d)\s*(?:on|ago)/i);
+          const priceMatch = fullText.match(/\\$[\\d,]+(?:\\.\\d+)?/);
+          const bedMatch = fullText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:bd|bed|bds|br)/i);
+          const bathMatch = fullText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:ba|bath|bas)/i);
+          const sqftMatch = fullText.match(/([\\d,]+)\\s*(?:sq\\s*ft|sqft)/i);
+          const domMatch = fullText.match(/(\\d+)\\s*(?:day|d)\\s*(?:on|ago)/i);
 
           results.push({
             source: 'zillow',
-            address: fullText.split('\n')[0]?.trim().slice(0, 120) ?? '(unknown)',
+            address: fullText.split('\\n')[0]?.trim().slice(0, 120) ?? '(unknown)',
             price: priceMatch?.[0] ?? '(price not found)',
             beds: bedMatch?.[1] ?? '',
             baths: bathMatch?.[1] ?? '',
@@ -354,16 +332,16 @@ export async function scrapeZillow(page: Page): Promise<PropertyData[]> {
         '[class*="listing"], [class*="property"], [class*="result-list"]'
       );
       for (const card of genericCards) {
-        const fullText = (card as HTMLElement).innerText?.trim() ?? '';
+        const fullText = card.innerText?.trim() ?? '';
         if (fullText && fullText.length > 20) {
-          const priceMatch = fullText.match(/\$[\d,]+(?:\.\d+)?/);
-          const bedMatch = fullText.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed|bds|br)/i);
-          const bathMatch = fullText.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath|bas)/i);
-          const sqftMatch = fullText.match(/([\d,]+)\s*(?:sq\s*ft|sqft)/i);
+          const priceMatch = fullText.match(/\\$[\\d,]+(?:\\.\\d+)?/);
+          const bedMatch = fullText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:bd|bed|bds|br)/i);
+          const bathMatch = fullText.match(/(\\d+(?:\\.\\d+)?)\\s*(?:ba|bath|bas)/i);
+          const sqftMatch = fullText.match(/([\\d,]+)\\s*(?:sq\\s*ft|sqft)/i);
 
           results.push({
             source: 'zillow',
-            address: fullText.split('\n')[0]?.trim().slice(0, 120) ?? '(unknown)',
+            address: fullText.split('\\n')[0]?.trim().slice(0, 120) ?? '(unknown)',
             price: priceMatch?.[0] ?? '(price not found)',
             beds: bedMatch?.[1] ?? '',
             baths: bathMatch?.[1] ?? '',
@@ -378,7 +356,7 @@ export async function scrapeZillow(page: Page): Promise<PropertyData[]> {
     }
 
     return results;
-  });
+  })()`) as PropertyData[];
 
   return listings;
 }
