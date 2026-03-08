@@ -9,6 +9,10 @@ import { SquadClient } from '@bradygaster/squad-sdk/client';
 import type { SquadSession, SquadSessionConfig } from '@bradygaster/squad-sdk/adapter';
 import type { SquadSessionEvent, SquadSessionEventHandler } from '@bradygaster/squad-sdk/adapter';
 import squadConfig from './squad.config.js';
+import { initSquadTelemetry } from '@bradygaster/squad-sdk';
+
+// Initialize OpenTelemetry (sends traces/metrics to Aspire when OTEL_EXPORTER_OTLP_ENDPOINT is set)
+const telemetry = initSquadTelemetry();
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ANSI helpers
@@ -322,6 +326,8 @@ async function main(): Promise<void> {
   try {
     await client.disconnect();
   } catch { /* best effort */ }
+
+  await telemetry.shutdown();
 
   rl.close();
 }
