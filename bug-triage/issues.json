@@ -1,0 +1,560 @@
+[
+  {
+    "assignees": [],
+    "body": "When navigating https://bradygaster.github.io/squad/reference/cli.html\nClicking link for: [Recipes & Advanced Scenarios](https://bradygaster.github.io/squad/cookbook/recipes.html) ΓÇö Prompt-driven cookbook\n\nURL which shows 403 error.\nhttps://bradygaster.github.io/squad/cookbook/recipes.html\n\nI think this should somehow be referencing the underlying codebase somehow... https://github.com/bradygaster/squad/blob/main/docs/cookbook/recipes.md",
+    "createdAt": "2026-03-08T09:21:07Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I0FQ",
+        "name": "type:bug",
+        "description": "Something broken",
+        "color": "FF0422"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I1FQ",
+        "name": "priority:p2",
+        "description": "Next sprint",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3XQ",
+        "name": "squad:mcmanus",
+        "description": "Assigned to McManus (DevRel)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACaH0yPg",
+        "name": "squad:cheritto",
+        "description": "Assigned to Cheritto (TUI Engineer)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACal_TCw",
+        "name": "status:in-progress",
+        "description": "Work actively in progress",
+        "color": "FBCA04"
+      }
+    ],
+    "number": 266,
+    "title": "Recipes & Advanced Scenarios (recipes.html) shows 403 error page"
+  },
+  {
+    "assignees": [],
+    "body": "## CommunicationAdapter ΓÇö Platform-agnostic agent-human communication\n\n### Problem\n\nSquad agents need to communicate with humans (status updates, decisions, escalations, questions). Currently this is ad-hoc ΓÇö some users use Teams webhooks, some rely on GitHub issue comments, ADO users have Work Item discussions. There is no unified abstraction.\n\nRelated discussion: #242 (Dina wants phone-capable comms, Brady wants no GitHub lock-in).\n\n### Proposal\n\nAdd a `CommunicationAdapter` interface to the platform layer, alongside the existing `PlatformAdapter`:\n\n```typescript\ninterface CommunicationAdapter {\n  postUpdate(channel: string, message: string, options?: { format?: \"text\" | \"card\" }): Promise<void>;\n  pollForReplies(channel: string, since: Date): Promise<Reply[]>;\n  getNotificationUrl(channel: string): string;\n}\n```\n\n### Implementations\n\n| Adapter | Phone-capable | Corp-only | Setup | Notes |\n|---------|:---:|:---:|---|---|\n| **GitHubDiscussionsAdapter** | Yes (browser) | No | Zero | Uses `gh api` or GitHub MCP. Categories map to signal types. |\n| **ADOWorkItemDiscussionAdapter** | Yes (ADO mobile) | Depends | Zero | Comment threads on work items. Already have az CLI wiring. |\n| **TeamsWebhookAdapter** | Yes (Teams mobile) | Yes | Low | Outbound via webhook, inbound via WorkIQ polling or Power Automate. |\n| **FileLogAdapter** (fallback) | Via git client | No | Zero | Writes to `.squad/log/` ΓÇö always available, lowest common denominator. |\n\n### Integration Points\n\n- **Scribe** posts session summaries to the configured channel after significant work\n- **Ralph** posts board status during idle-watch check-ins\n- **Coordinator** posts escalations when agents are blocked\n- **Agents** can post decisions that need async human review\n- Config in `.squad/config.json` under a `communications` key\n\n### Prototype\n\nA working Teams webhook + WorkIQ polling prototype exists (tested on a separate machine). The pattern:\n- Outbound: POST to Teams webhook URL (plain text, not adaptive cards for mobile copy-ability)\n- Inbound: WorkIQ MCP tool polls Teams channel for replies matching a unique thread ID\n- Deduplication via message timestamp tracking\n\n### Acceptance Criteria\n\n- [ ] `CommunicationAdapter` interface in `packages/squad-sdk/src/platform/types.ts`\n- [ ] `GitHubDiscussionsAdapter` implementation\n- [ ] `ADOWorkItemDiscussionAdapter` implementation (leverages existing ADO adapter)\n- [ ] `TeamsWebhookAdapter` implementation (from prototype)\n- [ ] `FileLogAdapter` fallback (always available)\n- [ ] Scribe integration ΓÇö posts to channel after agent batches\n- [ ] Config schema in `.squad/config.json`\n- [ ] `squad init` offers channel setup as optional post-init step\n- [ ] Docs: communication channel setup per platform\n- [ ] Phone-capable: all adapters except FileLog work on mobile\n\n### Non-Goals (for this issue)\n\n- Push notifications from platform to Squad (Phase 2 ΓÇö Power Automate / Bot Framework)\n- Cross-squad communication aggregation (belongs in #242 meta-hub)\n- Real-time chat (Squad is async-first)\r\n",
+    "createdAt": "2026-03-07T18:01:33Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACal_TRA",
+        "name": "status:in-review",
+        "description": "PR open, awaiting review",
+        "color": "0E8A16"
+      }
+    ],
+    "number": 261,
+    "title": "feat: CommunicationAdapter ΓÇö platform-agnostic agent-human communication"
+  },
+  {
+    "assignees": [],
+    "body": "## Summary\nExplore feasibility of running Squad from GitHub.com ΓÇö either through the agents panel, GitHub Actions, or a GitHub App integration.\n\n**Origin:** Discussion #173 by @diberry\n\n## Current State\nSquad is CLI-based and requires local file system access + shell execution. This is fundamentally different from browser-based environments.\n\n## Potential Approaches\n1. **GitHub App** ΓÇö Squad as a GitHub App that responds to issue comments, PR events\n2. **Codespaces integration** ΓÇö Squad in a Codespace (already works, just needs documentation)\n3. **GitHub Actions trigger** ΓÇö Squad as an Actions workflow (partially exists via heartbeat)\n4. **Agent panel integration** ΓÇö Requires GitHub platform changes, longer-term\n\n## Notes\nCodespaces is the most immediately viable path ΓÇö Squad already works there. We should document this better. The GitHub App approach is the most powerful long-term option.\n\n## Related\n- GitHub App auth (#256) ΓÇö prerequisite for app-based approach\n- CLI-First (#252) ΓÇö CLI commands that could be triggered remotely",
+    "createdAt": "2026-03-07T17:06:37Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-Iz_Q",
+        "name": "type:feature",
+        "description": "New capability",
+        "color": "DDD1F2"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACagrkrQ",
+        "name": "status:backlog",
+        "description": "Backlog item",
+        "color": "c5def5"
+      }
+    ],
+    "number": 260,
+    "title": "Explore: GitHub.com-based Squad experience"
+  },
+  {
+    "assignees": [],
+    "body": "## Summary\nUser reports VS Code unexpectedly closes (no crash dialog) while Squad is executing a task. Needs investigation to determine if Squad's resource footprint contributes.\n\n**Origin:** Discussion #174 by @diberry\n\n## Context\n- VS Code nightly build\n- No crash dialog ΓÇö VS Code just closes\n- Happened during Squad task execution\n\n## Investigation Plan\n1. Audit Squad's memory footprint during multi-agent execution\n2. Check file watcher count (VS Code has limits)\n3. Review process spawning patterns\n4. Test on stable VS Code vs nightly\n5. Check if terminal flicker fix (#254) reduces resource pressure\n\n## Related\n- Terminal flickering (#254) ΓÇö related resource/rendering pressure",
+    "createdAt": "2026-03-07T17:06:24Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I0FQ",
+        "name": "type:bug",
+        "description": "Something broken",
+        "color": "FF0422"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I1FQ",
+        "name": "priority:p2",
+        "description": "Next sprint",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3kA",
+        "name": "squad:fenster",
+        "description": "Assigned to Fenster (Core Dev)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3wA",
+        "name": "squad:hockney",
+        "description": "Assigned to Hockney (Tester)",
+        "color": "9B8FCC"
+      }
+    ],
+    "number": 259,
+    "title": "Investigate: VS Code crash during Squad execution"
+  },
+  {
+    "assignees": [],
+    "body": "## Summary\nThe Teams MCP server documentation references files and examples that don't exist in the current codebase. Needs end-to-end verification and refresh.\n\n**Origin:** Discussion #140 by @msquibb\n\n## Evidence\n- Docs reference examples that don't exist on disk\n- Community members have created working implementations independently (see gist by @benleane83)\n- Docs may be ahead of implementation\n\n## What's Needed\n1. Audit Teams MCP integration end-to-end\n2. Verify or remove outdated doc examples\n3. Test with actual Teams incoming webhook + MCP server\n4. Update docs to reflect current reality\n5. Consider linking to community implementations\n\n## References\n- Community gist: https://gist.github.com/benleane83/f37b5bc1ed3d00e320ba48886109b82a",
+    "createdAt": "2026-03-07T17:06:15Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I0bA",
+        "name": "type:docs",
+        "description": "Documentation work",
+        "color": "D4E5F7"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I1FQ",
+        "name": "priority:p2",
+        "description": "Next sprint",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACagrkrQ",
+        "name": "status:backlog",
+        "description": "Backlog item",
+        "color": "c5def5"
+      }
+    ],
+    "number": 258,
+    "title": "Docs: Teams MCP integration needs end-to-end audit and refresh"
+  },
+  {
+    "assignees": [],
+    "body": "## Summary\nUsers report that the Copilot coordinator sometimes 'takes over' and does work directly instead of delegating to squad agents. Improve delegation behavior so the coordinator consistently routes to agents.\n\n**Origin:** Discussion #161 by @jamescarter-le\n\n## Symptoms\n- Coordinator generates code directly instead of spawning agents\n- Agent responses get overwritten by coordinator\n- Users need workarounds like 'team fan out' to force delegation\n\n## Proposed Improvements\n- Stronger routing heuristics in squad.agent.md\n- Better prompt cues that reinforce delegation\n- CLI mode improvements that give users more direct control over agent routing\n- Consider a 'strict delegation' mode that prevents coordinator from generating domain artifacts\n\n## Related\n- CLI-First architecture (#252) ΓÇö dedicated CLI reduces coordinator interference\n- Skill-based orchestration (#255) ΓÇö clearer capability boundaries",
+    "createdAt": "2026-03-07T17:05:56Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I1FQ",
+        "name": "priority:p2",
+        "description": "Next sprint",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3KA",
+        "name": "squad:keaton",
+        "description": "Assigned to Keaton (Lead)",
+        "color": "9B8FCC"
+      }
+    ],
+    "number": 257,
+    "title": "Improve coordinator delegation ΓÇö reduce 'takeover' behavior"
+  },
+  {
+    "assignees": [],
+    "body": "## Summary\nAllow Squad to authenticate as a GitHub App so that AI-authored commits, PRs, and actions show up under an app identity rather than a user account.\n\n**Origin:** Discussion #179 by @msquibb\n\n## Why\n- Clearer audit trail for AI vs human contributions\n- Better compliance for organizations tracking AI-authored changes\n- Aligns with GitHub's app-based authentication patterns\n\n## Scope\n- Configure Squad to use GitHub App credentials for git operations\n- PR authorship shows app identity instead of user identity\n- Maintain backward compatibility with personal token auth\n\n## Notes\nThis requires GitHub App infrastructure setup. Investigate feasibility of using installation tokens for git push and gh CLI operations.",
+    "createdAt": "2026-03-07T17:05:43Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-Iz_Q",
+        "name": "type:feature",
+        "description": "New capability",
+        "color": "DDD1F2"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I1FQ",
+        "name": "priority:p2",
+        "description": "Next sprint",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACagrkrQ",
+        "name": "status:backlog",
+        "description": "Backlog item",
+        "color": "c5def5"
+      }
+    ],
+    "number": 256,
+    "title": "Support GitHub App authentication for Squad-authored commits"
+  },
+  {
+    "assignees": [],
+    "body": "## RFC: CLI-First Architecture ΓÇö Migrate Squad Automation from GitHub Actions to CLI Commands\r\n\r\n> **Status:** Open for community feedback\r\n> **Authors:** Squad team (Keaton, Fenster, Kobayashi, McManus) ΓÇö unanimous consensus\r\n> **Related:** #248 (squad triage wiring), #236 (persistent Ralph/watch)\r\n\r\n---\r\n\r\n## Problem Statement\r\n\r\nWhen you run `squad init` today, Squad installs GitHub Actions workflows into your repository. Some of these workflows run automatically on issue events, label changes, and cron schedules ΓÇö consuming Actions minutes and producing workflow runs that the repo owner didn't explicitly ask for.\r\n\r\nThis creates three problems:\r\n\r\n1. **Trust deficit.** Seeing 10-20 unexpected workflow runs in your Actions tab erodes confidence. Users wonder \"what is this tool doing in my repo?\" ΓÇö even when the answer is benign (label sync, triage). *Zero surprise automation* should be the default.\r\n2. **Portability lock-in.** Squad's core value is the CLI-first multi-agent runtime. But if triage, label management, and heartbeat monitoring only work via GitHub Actions, Squad can't run in containers, Codespaces, devcontainers, or any environment without Actions infrastructure.\r\n3. **Unnecessary coupling.** Five of our 14 workflows encode Squad-specific logic (triage routing, label sync, assignment) that belongs in the CLI ΓÇö not in YAML files committed to user repos. The remaining 9 are standard CI/CD infrastructure that *should* stay as Actions.\r\n\r\n## Current State\r\n\r\nSquad ships **14 GitHub Actions workflows**. After analysis, they cleanly separate into two categories:\r\n\r\n### Squad-Specific Workflows (migrate to CLI)\r\n\r\n| Workflow | Lines | Actions Min/Month | What It Does |\r\n|---|---|---|---|\r\n| `sync-squad-labels.yml` | ~170 | ~2 | Syncs team labels from config to repo |\r\n| `squad-triage.yml` | ~260 | ~5 | Routes new issues to squad members |\r\n| `squad-issue-assign.yml` | ~160 | ~2 | Assigns issues based on squad labels |\r\n| `squad-label-enforce.yml` | ~180 | ~2 | Validates label conventions on issues/PRs |\r\n| `squad-heartbeat.yml` | ~170 | ~1 | Periodic health check + stale issue ping |\r\n| **Total** | **~940** | **~12** | |\r\n\r\n### CI/Release Workflows (stay as Actions) Γ£à\r\n\r\n| Workflow | Purpose | Why It Stays |\r\n|---|---|---|\r\n| `squad-ci.yml` | Continuous integration | Event-driven gate ΓÇö must run on every push/PR |\r\n| `squad-release.yml` | npm publish pipeline | Release orchestration with secrets |\r\n| `squad-promote.yml` | Version promotion | Cross-branch coordination |\r\n| `squad-preview.yml` | PR preview builds | Tight GitHub PR integration |\r\n| `squad-docs.yml` | Documentation deployment | Triggered by doc changes |\r\n| `squad-publish.yml` | Package publishing | npm registry integration |\r\n| `squad-insider-release.yml` | Insider channel release | Separate release track |\r\n| `squad-insider-publish.yml` | Insider package publish | Separate publish track |\r\n\r\n**These 8 workflows consume ~215 Actions minutes/month and are load-bearing infrastructure.** They depend on GitHub-native event triggers (push, PR, release) and secrets management that cannot be replicated CLI-side. They stay exactly where they are.\r\n\r\n## Proposed Architecture: CLI-First with Opt-In Automation\r\n\r\n### Core Principle\r\n\r\n> Squad is a CLI tool that users invoke when they want it. No background automation without explicit opt-in.\r\n\r\n### CLI Command Mapping\r\n\r\nEach squad-specific workflow maps to a CLI command:\r\n\r\n| Workflow | CLI Command | Notes |\r\n|---|---|---|\r\n| `sync-squad-labels.yml` | `squad labels sync` | New command. Reads team config, syncs labels to repo. |\r\n| `squad-label-enforce.yml` | `squad labels enforce` | New command. Validates label conventions, reports violations. |\r\n| `squad-triage.yml` | `squad triage` | Enhancement of existing command. Full issue routing with comment posting. |\r\n| `squad-issue-assign.yml` | `squad assign` | New command (or integrate into `squad triage`). |\r\n| `squad-heartbeat.yml` | `squad watch` | Enhancement of existing command (#236). Already does 80% of heartbeat ΓÇö needs comment posting. |\r\n\r\n### The Tiered Model\r\n\r\n**Tier 1 ΓÇö Manual CLI (Default)**\r\n\r\n```bash\r\nsquad init my-repo\r\n# Installs: team config, charters, routing rules\r\n# Installs: ZERO GitHub Actions workflows\r\n# Result: Pure CLI experience. User runs commands when they want.\r\n```\r\n\r\n**Tier 2 ΓÇö Semi-Automated (Opt-In)**\r\n\r\n```bash\r\nsquad init my-repo --with-automation\r\n# Everything from Tier 1, PLUS:\r\n# Installs key workflows that call CLI commands on events\r\n# User explicitly chose this ΓÇö no surprises\r\n```\r\n\r\n**Tier 3 ΓÇö Full Automation (Enterprise)**\r\n\r\n```bash\r\nsquad init my-repo --with-full-automation\r\n# Everything from Tier 2, PLUS:\r\n# Cron-based heartbeat, scheduled label sync\r\n# Full event-driven pipeline ΓÇö for teams that want hands-off operation\r\n```\r\n\r\n### Why This Matters\r\n\r\n- **Portability:** CLI commands work everywhere ΓÇö local terminal, Codespaces, devcontainers, ACA containers, CI runners. No GitHub Actions dependency for core Squad features.\r\n- **Transparency:** Users see exactly what Squad does because they invoke it. No mystery workflow runs.\r\n- **Composability:** `squad labels sync && squad triage` in a script, a Makefile, a container entrypoint ΓÇö whatever fits the team's workflow.\r\n- **Existing investment:** `squad watch` already implements ~80% of heartbeat logic. `squad triage` exists. We're filling gaps, not starting from scratch.\r\n\r\n## Migration Plan\r\n\r\n### Phase 1: CLI Commands + Deprecation (v0.8.22)\r\n\r\n| CLI Command | Effort | Description |\r\n|---|---|---|\r\n| `squad labels sync` | S (4h) | Read team config ΓåÆ sync labels to repo via GitHub API |\r\n| `squad labels enforce` | S (4h) | Validate label conventions ΓåÆ report violations |\r\n| `squad triage` enhancement | M (1-2d) | Add comment posting, full issue routing |\r\n| `squad watch` enhancement | S (4h) | Add comment posting to existing watch loop (#236) |\r\n| `squad init` refactor | M (1d) | Default to no-actions. Add `--with-automation` flag. |\r\n\r\nExisting workflows get a deprecation notice in their YAML headers. CHANGELOG announces the shift.\r\n\r\n### Phase 2: New Commands + Cleanup Tools (v0.8.23)\r\n\r\n| CLI Command | Effort | Description |\r\n|---|---|---|\r\n| `squad assign` | M (1-2d) | Issue assignment based on squad labels and routing |\r\n| `squad upgrade --clean-actions` | S (4h) | Remove deprecated workflow files from repo |\r\n| `squad actions install` | M (1-2d) | Opt-in: install specific workflows |\r\n| `squad actions uninstall` | S (4h) | Remove specific workflows |\r\n| `squad actions status` | S (4h) | Show which workflows are installed and their state |\r\n\r\n### Phase 3: Workflow Removal (v0.9.0)\r\n\r\n- Remove 5 squad-specific workflow templates from Squad's codebase entirely\r\n- `squad init` no longer has any concept of squad-specific workflows\r\n- Opt-in automation (Tier 2/3) installs thin wrapper workflows that call CLI commands\r\n\r\n## Backward Compatibility\r\n\r\n- **No breaking changes in v0.8.x.** Existing workflows continue to function alongside new CLI commands.\r\n- **Deprecation warnings** are added to workflow files and CLI output in v0.8.22.\r\n- **`squad upgrade --clean-actions`** provides a one-command migration path ΓÇö users don't have to manually delete files.\r\n- **Opt-in automation** (Tier 2/3) ensures teams that *want* event-driven behavior can still have it ΓÇö they just have to ask for it.\r\n\r\n## What This Does NOT Change\r\n\r\nTo be crystal clear:\r\n\r\n- Γ£à **CI workflows stay.** `squad-ci.yml`, `squad-release.yml`, and all publish/promote workflows are untouched.\r\n- Γ£à **GitHub integration stays.** Squad still uses the GitHub API for issues, labels, PRs. Only the *trigger mechanism* changes (CLI invocation vs. Actions event).\r\n- Γ£à **Existing repos keep working.** Nothing breaks until you choose to migrate.\r\n\r\n## Timeline\r\n\r\n| Milestone | Target | What Ships |\r\n|---|---|---|\r\n| v0.8.22 | Next release | `squad labels sync/enforce`, `squad triage` enhancement, `squad watch` enhancement, `squad init` no-actions default, deprecation notices |\r\n| v0.8.23 | Following release | `squad assign`, `squad upgrade --clean-actions`, `squad actions install/uninstall/status` |\r\n| v0.9.0 | Major minor | Remove deprecated workflows from codebase. Opt-in automation via thin wrappers. |\r\n\r\n## Feedback Requested\r\n\r\nWe want community input before we ship this. Specifically:\r\n\r\n1. **Does the tiered model make sense?** Should `squad init` default to zero workflows (Tier 1), or is there a better default?\r\n\r\n2. **Which CLI commands matter most?** If you could only have two of the five new commands in v0.8.22, which two?\r\n\r\n3. **How do you run Squad today?** Local terminal? Codespaces? CI? This helps us prioritize the portability story.\r\n\r\n4. **Opt-in automation UX:** Is `--with-automation` the right flag? Should it be `--actions`? Something else?\r\n\r\n5. **Migration friction:** Is `squad upgrade --clean-actions` sufficient, or do you want a more guided migration (interactive prompts, dry-run mode)?\r\n\r\n6. **Cron replacement:** For `squad-heartbeat.yml` users ΓÇö would running `squad watch` in a long-lived container (or as a cron job on your own infra) work for your use case?\r\n\r\n7. **Anything we're missing?** Edge cases, workflows you depend on, concerns about the transition?\r\n\r\n---\r\n\r\n*This RFC reflects unanimous consensus from the Squad team. The analysis covers all 14 workflows, separating load-bearing CI/CD infrastructure (stays) from squad-specific automation (migrates to CLI). We believe this makes Squad more portable, more transparent, and more trustworthy.*\r\n\r\n*ΓÇö Keaton, Lead*\r\n",
+    "createdAt": "2026-03-07T16:37:44Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I05A",
+        "name": "priority:p1",
+        "description": "This sprint",
+        "color": "D93F0B"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3KA",
+        "name": "squad:keaton",
+        "description": "Assigned to Keaton (Lead)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACaH0yPg",
+        "name": "squad:cheritto",
+        "description": "Assigned to Cheritto (TUI Engineer)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACagrk1w",
+        "name": "type:rfc",
+        "description": "RFC",
+        "color": "fbca04"
+      }
+    ],
+    "number": 252,
+    "title": "RFC: CLI-First Architecture ΓÇö Migrate Squad Automation from GitHub Actions to CLI Commands"
+  },
+  {
+    "assignees": [],
+    "body": "## Problem\n\nThe `squad triage` command (aliases: `watch`, `loop`) is documented as auto-triaging issues to the team, but the implementation in `src/cli/commands/triage.ts` does not wire the polling loop to the team assignment engine. Running `squad triage --interval 5` starts polling but issues are never routed to team members.\n\n## Root Cause\n\nIn `src/cli/commands/triage.ts`, the `execute()` method calls `startPolling()` but does not bind the issue event stream to `TeamAssignmentEngine.dispatch()`. The polling loop collects issues from GitHub but does not invoke team routing logic.\n\nComparison:\n- **What works**: `squad copilot --auto-assign` successfully routes issues to the Copilot agent via `src/agents/copilot.ts:assignIssue()`\n- **What's broken**: `squad triage` collects issues but the next step (team dispatch) is missing\n\n## Impact\n\nUsers run `squad triage` expecting their team members to automatically claim issues and propose work, but nothing happens. The feature is advertised in the README and CLI help text but is non-functional.\n\n## Expected Behavior\n\n1. User runs `squad triage --interval 10`\n2. CLI polls GitHub issues every 10 minutes\n3. For each new/unassigned issue, `TeamAssignmentEngine.dispatch(issue)` is called\n4. Engine evaluates team member expertise and assigns the issue\n5. Assigned team member (`Backend`, `Frontend`, `Tester`, `Lead`) generates a comment with work proposal\n\n## What Needs to Happen\n\nWire the polling event stream to team dispatch in `src/cli/commands/triage.ts`:\n\n```typescript\n// After GitHub issue is fetched, dispatch to team:\nawait TeamAssignmentEngine.dispatch({\n  issue: githubIssue,\n  teamContext: this.loadedTeam,\n  assignmentStrategy: 'expertise-match'\n});\n```\n\nThis mirrors the existing pattern in `src/agents/copilot.ts:assignIssue()`, which already successfully routes work to Copilot.\n\n## Scope\n\n- Update `src/cli/commands/triage.ts:execute()` to call `TeamAssignmentEngine.dispatch()` on each polled issue\n- Add integration test in `tests/cli/triage.test.ts` to verify dispatch is called (currently missing)\n- Verify polling interval is respected and does not trigger duplicate assignments\n\n## Why This Matters\n\nPersistent Ralph (#236) depends on this working. Without functioning `squad triage`, the team cannot autonomously watch and respond to issues. This is a core feature advertised in the pitch.\n\n---\n*Contributed by [Klement Gunndu](https://github.com/KlementMultiverse)*",
+    "createdAt": "2026-03-07T14:50:58Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3kA",
+        "name": "squad:fenster",
+        "description": "Assigned to Fenster (Core Dev)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3wA",
+        "name": "squad:hockney",
+        "description": "Assigned to Hockney (Tester)",
+        "color": "9B8FCC"
+      }
+    ],
+    "number": 248,
+    "title": "CLI command wiring: `squad triage` does not trigger team assignment loop"
+  },
+  {
+    "assignees": [],
+    "body": "## Overview\n\nSquad currently assumes `.squad/` is co-located with the repository you're actively working in. This works well for single-repo setups, but it fundamentally breaks down for users who want **clean production repos** ΓÇö and breaks silently, with no error message, making it look like a fresh install every time.\n\nThis issue proposes a first-class **tiered Squad deployment model** that spans from a single repo all the way to a personal meta-hub that monitors every squad you operate, across personal accounts and org accounts alike. Each tier supports GitHub Discussions as a communication layer ΓÇö surfacing agent activity, decisions, and escalations to humans without polluting source repo backlogs.\n\n---\n\n## The Core Problem\n\nSquad resolves its team root by running `git rev-parse --show-toplevel` from the current working directory, then checking for `.squad/` there. If nothing is found, it walks `git worktree list` looking for a main checkout. If that also fails, it enters **Init Mode** ΓÇö silently, indistinguishably from a fresh install.\n\nThis means: if you open a terminal in a target repo that has no `.squad/`, Squad sees no team at all. The user must remember to always start sessions from the hub directory ΓÇö easy to forget, not documented as required, no error when forgotten.\n\nThis cannot be fixed with documentation alone. The failure mode gives no signal that a hub exists elsewhere.\n\n---\n\n## The Tiered Deployment Model\n\nSquad should recognize and support three tiers of team state storage, each building on the one before. Every tier supports GitHub Discussions as an optional communication surface.\n\n### Tier 1 ΓÇö Team (single repo)\n\nThe current default. `.squad/` lives inside the source repo, or in a dedicated companion branch or companion repo for that project.\n\n```\nmy-project/               ΓåÉ source repo\n  .squad/                 ΓåÉ Squad state (current behavior)\n\nΓÇö OR ΓÇö\n\nmy-project/               ΓåÉ source repo (Squad-clean)\nmy-project-squad/         ΓåÉ private companion repo, Squad state only\n```\n\n**Discussions at Tier 1:**\n\n```\nmy-project-squad (Discussions)\n  ≡ƒôï Standup          ΓåÉ Scribe: session summaries after significant work\n  ≡ƒÜª Decisions        ΓåÉ decisions posted for async human review\n  ΓÜá∩╕Å  Blocked         ΓåÉ issues an agent couldn't resolve alone\n```\n\n**When to use:** Solo projects, small teams, repos where Squad noise in git history is acceptable.\n\n---\n\n### Tier 2 ΓÇö Hub (domain-level, multiple repos)\n\nA private hub repo owns Squad state for an entire domain of related repos. Target repos are completely Squad-clean ΓÇö no `.squad/`, no agent history, nothing.\n\n```\ngeraldinefberry-content-squad/    ΓåÉ private hub: Azure content writing\n  .squad/\n    team.md, agents/, decisions.md, ...\n\ngeraldinefberry-samples-squad/    ΓåÉ private hub: azure-samples code\n  .squad/\n    team.md, agents/, decisions.md, ...\n\n(target repos ΓÇö Squad-free, collaborators see nothing)\nazure-docs-pr/\nazure-samples/\nsample-repo-1/\nsample-repo-2/\n```\n\n**Discussions at Tier 2:**\n\n```\ngeraldinefberry-content-squad (Discussions)\n  ≡ƒôï Standup          ΓåÉ Scribe: daily summary of agent activity across all target repos\n  ≡ƒÜª Decisions        ΓåÉ decisions that affect the domain (e.g., template changes)\n  ΓÜá∩╕Å  Blocked         ΓåÉ agent blocked on ambiguous requirements, needs human input\n\ngeraldinefberry-samples-squad (Discussions)\n  ≡ƒôï Standup\n  ≡ƒÜª Decisions\n  ΓÜá∩╕Å  Blocked\n```\n\n**When to use:**\n- You manage many repos in a domain (e.g., all of azure-samples)\n- Repos are shared or public and Squad state would be noise for collaborators\n- You have distinct responsibility areas, each needing their own team and memory\n- You want Squad product upgrades (new files, renamed files, schema changes) to land only in the hub, never in production repos\n\n---\n\n### Tier 3 ΓÇö Meta-Hub (cross-org, all squads)\n\nA single personal or org-level repo ΓÇö named by convention `{username}/.squad` ΓÇö that knows about every squad you operate across personal accounts, work accounts, and org accounts.\n\n```\ngeraldinefberry/.squad            ΓåÉ meta-hub: all squads\n  cross-squad/\n    registry.json                 ΓåÉ index of all registered squad repos\n    geraldinefberry-content-squad/\n    geraldinefberry-samples-squad/\n    microsoft-azure-docs-squad/\n\ngeraldinefberry/content-squad     ΓåÉ hub for content domain\ngeraldinefberry/azure-samples-squad  ΓåÉ hub for samples domain\nmicrosoft/azure-docs-squad        ΓåÉ org-level hub (if permitted)\n```\n\nThe `{username}/.squad` naming mirrors GitHub's own `{username}/.github` convention ΓÇö discoverable by design.\n\n**Discussions at Tier 3:**\n\n```\ngeraldinefberry/.squad (Discussions)\n  ≡ƒôó Announcements    ΓåÉ meta Ralph: weekly board summary across all registered squads\n  ≡ƒöä Cross-Squad      ΓåÉ escalations that span multiple hubs\n  ≡ƒÅù∩╕Å Architecture     ΓåÉ decisions that affect multiple squads or all domains\n```\n\n**What the meta-hub does:**\n\n| Capability | Detail |\n|------------|--------|\n| **Registry** | `cross-squad/registry.json` maps every squad repo by owner, org, domain, and access level |\n| **Cross-squad Ralph** | Ralph runs at the meta level ΓÇö monitors open issues and PRs across ALL registered squads |\n| **Health dashboard** | Summarizes board status across all squads: issues open, PRs pending, squads idle |\n| **Promotion routing** | Issues that span domains can be escalated to the meta Lead, who routes sub-tasks to domain squads |\n| **Credential scoping** | Knows which `gh` contexts (personal, MSFT SSO, etc.) to use per squad |\n\n**When to use:** You operate multiple squads across personal and org accounts and want one place to see the full picture.\n\n---\n\n## Tier Summary\n\n| Tier | Scope | Repo naming | Ralph scope | Discussions categories |\n|------|-------|-------------|-------------|------------------------|\n| **team** | One repo | `.squad/` in repo, or `{repo}-squad` companion | That repo's board | Standup, Decisions, Blocked |\n| **hub** | One domain (multiple repos) | `{domain}-squad` or `{username}-squad` | All repos in the domain | Standup, Decisions, Blocked |\n| **meta** | All squads, all orgs | `{username}/.squad` or `{org}/.squad` | All registered squads | Announcements, Cross-Squad, Architecture |\n\n---\n\n## Companion Repo vs. Companion Branch\n\nAt Tier 1 and Tier 2, Squad state can be stored in either a **branch** or a **repo**:\n\n| Concern | Branch (`--squad-branch`) | Companion Repo (`--companion-repo`) |\n|---------|--------------------------|--------------------------------------|\n| Squad files visible in public repo file tree | Γ¥î Yes (on that branch) | Γ£à Never ΓÇö different repo |\n| History pollution in source repo | Γ¥î Orphan branch still in `git log --all` | Γ£à Completely separate history |\n| Visibility control | Γ¥î Inherits source repo visibility | Γ£à Can be private while source is public |\n| Organizational clarity | ≡ƒƒí Requires branch discipline | Γ£à Wrong repo = obvious mistake |\n| Multi-repo span | Γ¥î One branch per source repo | Γ£à Single hub repo spans many sources |\n\nBoth should be first-class init options:\n- `squad init --squad-branch squad` ΓåÆ orphan branch in same repo\n- `squad init --companion-repo` ΓåÆ new private sibling repo (recommended for public repos)\n- `squad init --hub` ΓåÆ promote to Tier 2 hub, spanning multiple repos\n- `squad init --meta` ΓåÆ scaffold Tier 3 meta-hub with registry\n\n---\n\n## Discovery: Finding the Team Root\n\nFor Squad to work from any directory regardless of tier, it needs a multi-step discovery mechanism:\n\n### Resolution Order\n\n1. **`SQUAD_TEAM_ROOT` env var** ΓÇö if set and valid, use immediately. No file scanning.\n2. **`.squadrc` pointer file** ΓÇö walk up from CWD (same as `.git` discovery). If found, team root = path in file.\n3. **`.squad/` at `git rev-parse --show-toplevel`** ΓÇö current behavior.\n4. **`.squad/` at main worktree** ΓÇö current fallback via `git worktree list`.\n5. **Init Mode** ΓÇö but now with a hint: *\"No team found. If your team lives in a hub repo, set SQUAD_TEAM_ROOT or add a .squadrc file pointing to it.\"*\n\n### `.squadrc` Format\n\n```\n# .squadrc (in target repo root, gitignored by default)\nteam_root = ~/repos/geraldinefberry-samples-squad\n```\n\nDiscovered by walking up from CWD, so it works from any subdirectory of the target repo.\n\n### `SQUAD_TEAM_ROOT` env var\n\n```bash\nexport SQUAD_TEAM_ROOT=~/repos/geraldinefberry-samples-squad\n```\n\nZero repo changes. Set once in shell profile. Works from any directory.\n\n---\n\n## Commit Targeting: Keeping Scribe on the Right Branch\n\nToday Scribe commits `.squad/` changes to whatever branch is checked out. For hub and meta repos this is fine, but for the `--squad-branch` pattern, Scribe needs to know to commit to the designated branch, not the current one.\n\n### Proposed: `git.commit_branch` in `.squad/config.json`\n\n```json\n{\n  \"git\": {\n    \"commit_branch\": \"squad\"\n  }\n}\n```\n\nScribe reads this field and commits to the specified branch. Field is optional ΓÇö omitting it preserves current behavior.\n\n### Automated Setup via `--squad-branch`\n\n`squad init --squad-branch squad` would:\n1. Create orphan `squad` branch (or use existing)\n2. Add it as a git worktree at `../{repo-name}-squad/`\n3. Initialize `.squad/` in that worktree\n4. Write `.squadrc` in the project root pointing at the worktree\n5. Set `git.commit_branch: \"squad\"` in `.squad/config.json`\n\n---\n\n## GitHub Discussions as Communication Layer\n\nSquad's file-based state (`decisions.md`, `history.md`, logs) is machine-readable and agent-friendly, but invisible to humans unless they know to look. GitHub Discussions provides a complementary surface: human-readable, notification-driven, threaded, and built into GitHub with no extra tooling.\n\nThis is **additive** ΓÇö Discussions surface Squad activity to humans without replacing file-based state. Agents write decisions and logs as today; Scribe optionally mirrors significant events to Discussions for async human visibility.\n\n### Per-Tier Discussion Categories\n\nEach tier uses a different category set reflecting its scope:\n\n| Tier | Categories | Purpose |\n|------|-----------|---------|\n| **Tier 1 (team)** | Standup, Decisions, Blocked | Single-project agent activity and human check-ins |\n| **Tier 2 (hub)** | Standup, Decisions, Blocked | Domain-wide agent activity across all target repos |\n| **Tier 3 (meta)** | Announcements, Cross-Squad, Architecture | Cross-squad coordination and escalation |\n\n### What Gets Posted Where\n\n| Signal | Agent | Tier | Category | Why |\n|--------|-------|------|----------|-----|\n| Session summary after significant work | Scribe | 1 or 2 | Standup | Async human catch-up |\n| Decision that affects the domain | Scribe | 2 | Decisions | Human review before it propagates |\n| Agent blocked on ambiguous requirements | Any agent | 1 or 2 | Blocked | Human input needed |\n| Weekly board summary (issues closed, PRs merged) | Ralph | 3 (meta) | Announcements | Cross-squad visibility |\n| Issue that spans two domains | Lead (hub) | 3 (meta) | Cross-Squad | Escalation with full context |\n| Architectural decision affecting multiple squads | Lead (meta) | 3 (meta) | Architecture | Visibility before adoption |\n\n### Inter-Squad Escalation Flow\n\n```\nTier 2 Hub (content-squad)\n  Scribe posts: \"Decision: switching all Azure content to new template format\"\n        Γåô\n  Tier 3 Meta-hub Lead sees it in Cross-Squad feed\n        Γåô\n  Meta Lead posts to meta Discussions: \"This affects azure-samples-squad ΓÇö\n  @geraldinefberry review before samples squad adopts same template\"\n        Γåô\n  Human (geraldinefberry) responds in Discussion thread\n        Γåô\n  Meta Scribe writes resolution back to .squad/decisions/inbox/\n```\n\n### Why Discussions Over Issues\n\n- **Issues are work items.** A decision isn't a bug. An agent standup isn't a task. Using issues for communication pollutes the backlog.\n- **Discussions support threading.** A cross-squad architectural debate can have a main post (Scribe) with human responses, without creating noise in either source repo.\n- **Discussions have categories.** The structured categories map cleanly to signal types (decisions, standups, escalations).\n- **Discussions are searchable across repos.** GitHub's search indexes Discussion content ΓÇö a human can find a decision across all squad repos from one place.\n\n### Configuration\n\n```json\n// .squad/config.json\n{\n  \"discussions\": {\n    \"enabled\": true,\n    \"standup_category\": \"Standup\",\n    \"decisions_category\": \"Decisions\",\n    \"blocked_category\": \"Blocked\",\n    \"post_after_session\": true,\n    \"post_decisions_threshold\": \"significant\"\n  }\n}\n```\n\n`squad init` asks: *\"Enable GitHub Discussions for this squad? Scribe can post session summaries and decisions there. (yes/no)\"*\n\n---\n\n## Cross-Org Considerations (Meta-Hub)\n\nSquad repos inside Microsoft orgs (e.g., `microsoft/azure-docs-squad`) may not be readable from a personal meta-hub without token scoping. The meta-hub needs:\n- Multiple `gh` auth contexts (`gh auth switch` support)\n- Read-only mirroring of org squad state into `cross-squad/` in the meta-hub\n- Respect for org visibility rules ΓÇö private org squad state must not be written to a public meta-hub\n- Discussions at the meta tier must respect the same visibility rules ΓÇö private org Discussions must not be cross-posted to a public meta-hub\n\n---\n\n## Why This Is a Product Gap, Not a Docs Fix\n\nThe hub repo pattern is the **natural conclusion** of recommending that users keep Squad state out of shared repos. If Squad recommends clean repos but silently fails when that architecture is used, the product is sending users toward a cliff.\n\nThe failure mode is indistinguishable from a fresh install: no error, no hint, no recovery path. A correctly configured hub user hits Init Mode on day one.\n\n---\n\n## Acceptance Criteria\n\n**Discovery**\n- [ ] Squad resolves team root from `SQUAD_TEAM_ROOT` env var when set\n- [ ] Squad resolves team root from `.squadrc` pointer file when present in CWD ancestry\n- [ ] When no team is found, Init Mode prompt includes a hint about `SQUAD_TEAM_ROOT` and `.squadrc`\n- [ ] `.squadrc` is added to Squad's default `.gitignore` template (opt-in to commit)\n\n**Init flags**\n- [ ] `squad init --squad-branch <name>` creates orphan branch + worktree + `.squadrc` + `config.json` automatically\n- [ ] `squad init --companion-repo` creates a private `{repo}-squad` sibling repo and writes `.squadrc`\n- [ ] `squad init --hub` scaffolds a domain hub repo spanning multiple registered target repos\n- [ ] `squad init --meta` scaffolds a `{username}/.squad` meta-hub with `cross-squad/registry.json`\n\n**Commit targeting**\n- [ ] Scribe reads `git.commit_branch` from `.squad/config.json` and commits to that branch when set\n- [ ] `squad init` without flags behaves exactly as today (no regression)\n\n**Tiered naming convention**\n- [ ] `{username}/.squad` recognized as a meta-hub by convention\n- [ ] `squad register {owner/squad-repo}` CLI command adds a squad to the meta-hub registry\n- [ ] Ralph at meta tier can aggregate board status across all registered squads\n\n**GitHub Discussions**\n- [ ] Scribe can post to GitHub Discussions via `gh api` or MCP tools when `discussions.enabled: true`\n- [ ] Each tier uses its default category set: Tier 1/2 ΓåÆ Standup/Decisions/Blocked; Tier 3 ΓåÆ Announcements/Cross-Squad/Architecture\n- [ ] Meta-hub Ralph posts a weekly board summary to `{username}/.squad` Discussions > Announcements\n- [ ] Escalation routing: when a hub agent is blocked, Scribe opens a Discussion thread in the hub repo and (if configured) cross-posts to the meta-hub's Cross-Squad category\n- [ ] `squad init` offers Discussions setup as an optional post-init step\n- [ ] Discussion post format is consistent: agent name, squad, date, concise summary, link to relevant `.squad/` files\n- [ ] Discussions visibility follows org visibility rules ΓÇö private org squad Discussions must not be cross-posted to a public meta-hub\n\n**Documentation**\n- [ ] Hub repo pattern documented as a first-class deployment option\n- [ ] All three tiers documented with examples, tradeoff table, and Discussions category mapping\n- [ ] Cross-org auth (multiple `gh` contexts) documented in `.squadrc` reference\n- [ ] GitHub Discussions configuration documented per tier with setup instructions\n",
+    "createdAt": "2026-03-07T13:30:22Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3KA",
+        "name": "squad:keaton",
+        "description": "Assigned to Keaton (Lead)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3wA",
+        "name": "squad:hockney",
+        "description": "Assigned to Hockney (Tester)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACagrkrQ",
+        "name": "status:backlog",
+        "description": "Backlog item",
+        "color": "c5def5"
+      }
+    ],
+    "number": 242,
+    "title": "Feature: Tiered Squad Deployment ΓÇö Hub Repos, Companion Repos, and Meta-Hub for Clean Production Repos"
+  },
+  {
+    "assignees": [],
+    "body": "## ADO Integration Enhancement: Configurable Work Item Types & Area Paths\n\n### Background\nDuring external testing of the ADO platform adapter (PR #191), testers discovered that different ADO organizations use different work item types and project configurations:\n\n- **WDATP** project uses custom locked-down types (Stories category is literally named \"Do not create work items in this project\")\n- **OS** project uses `Scenario` instead of `User Story`\n- Standard ADO projects may use `User Story`, `Bug`, `Task`, etc.\n\nCurrently Squad hardcodes `User Story` as the work item type. This breaks in any non-standard ADO project.\n\n### Proposed Enhancements\n\n**P0 ΓÇö Configurable work item type**\n- Add `workItemType` option to squad config (e.g., `workItemType: \"Scenario\"` in `squad.config.ts`)\n- Auto-detect available work item types by querying the ADO process template\n- Fall back to `User Story` if not configured\n\n**P1 ΓÇö Area path configuration**\n- Add `areaPath` option to squad config so work items land in the correct team backlog\n- Current behavior: uses project default area path\n\n**P1 ΓÇö Iteration path support**\n- Map sprints/iterations for ADO work items\n- Allows work items to appear in the correct sprint board\n\n**P2 ΓÇö Process template introspection**\n- Query the ADO process template to discover available work item types, fields, and states dynamically\n- Handle ReadOnly fields gracefully (like WDATP's Activity field on Task Items)\n\n### Test Results Reference\nFull test results: https://github.com/tamirdresher_microsoft/tamresearch1/issues/14\n\n10/13 tests passed. 3 blocked by WDATP project restrictions (not Squad bugs).\n3 bugs found during testing were already fixed in PR #191:\n1. Γ£à GitHub workflows generated in ADO repos ΓÇö fixed (init skips for ADO)\n2. Γ£à No platform indicator in config ΓÇö fixed (adds \"platform\": \"azure-devops\")\n3. Γ£à MCP template references Trello ΓÇö fixed (platform-appropriate examples)\r\n",
+    "createdAt": "2026-03-07T12:24:23Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3kA",
+        "name": "squad:fenster",
+        "description": "Assigned to Fenster (Core Dev)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3wA",
+        "name": "squad:hockney",
+        "description": "Assigned to Hockney (Tester)",
+        "color": "9B8FCC"
+      }
+    ],
+    "number": 240,
+    "title": "feat: ADO configurable work item types, area paths, and iteration support"
+  },
+  {
+    "assignees": [],
+    "body": "## Feature: Persistent Ralph ΓÇö continuous work monitoring between sessions\n\n### Problem\nRalph runs in a loop during a Copilot session but stops when the session ends. There's no way to keep Ralph monitoring between sessions. Additionally, `squad watch` is implemented (356 lines in watch.ts) but not wired into the CLI, so users can't invoke it.\n\n### Current State\nThree layers of Ralph exist but two are broken:\n\n| Layer | Status | Issue |\n|-------|--------|-------|\n| **In-session** | Γ£à Works | Ralph loops while you're in a Copilot session |\n| **Local watchdog** (`squad watch`) | Γ¥î Not wired | `watch.ts` is built but `cli-entry.ts` logs \"pending\" instead of calling it |\n| **Cloud heartbeat** (GitHub Actions) | Γ¥î Cron disabled | `squad-heartbeat.yml` has the cron schedule commented out |\n\n### Proposed Solution\n\n**Phase 1: Wire `squad watch` into CLI** (same pattern as #224)\n- Route `watch` command in `cli-entry.ts` to the existing `watch.ts` implementation\n- Add `--interval N` flag (default 10 min) for polling frequency\n- Add help text entry\n\n**Phase 2: Enable heartbeat cron**\n- Uncomment cron schedule in `squad-heartbeat.yml` (default: every 30 min)\n- Document recommended intervals for different team sizes\n\n**Phase 3: Daemon/service support** (future)\n- PM2 integration for local persistent daemon\n- systemd unit file for Linux servers\n- Windows Task Scheduler support\n- Container-based deployment option\n\n### Approaches Considered\n\n| Approach | Pros | Cons |\n|----------|------|------|\n| `squad watch` (foreground) | Simple, portable, already built | Dies when terminal closes |\n| GitHub Actions cron | Free, no infra, already built | 30-min minimum interval, limited to GitHub repos |\n| PM2/systemd daemon | Survives reboots, proper service | Requires PM2/systemd knowledge |\n| OS scheduled task (cron/Task Scheduler) | Native, no dependencies | Platform-specific setup |\n| Docker container | Portable, isolated | Requires Docker |\n\n### Acceptance Criteria\n- [ ] `squad watch` works from CLI with `--interval` flag\n- [ ] Heartbeat cron is enabled with configurable schedule\n- [ ] Documentation covers all three Ralph layers\n- [ ] Ralph detects platform (GitHub/ADO) and uses correct commands\r\n",
+    "createdAt": "2026-03-07T09:37:53Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3kA",
+        "name": "squad:fenster",
+        "description": "Assigned to Fenster (Core Dev)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACaH0yPg",
+        "name": "squad:cheritto",
+        "description": "Assigned to Cheritto (TUI Engineer)",
+        "color": "9B8FCC"
+      }
+    ],
+    "number": 236,
+    "title": "feat: persistent Ralph ΓÇö wire squad watch + enable heartbeat cron"
+  },
+  {
+    "assignees": [],
+    "body": "I'm specifically thinking of Lori's docs agent. How to build a squad that can be wrapped in a CLI to be invoked. ",
+    "createdAt": "2026-03-05T18:03:23Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3XQ",
+        "name": "squad:mcmanus",
+        "description": "Assigned to McManus (DevRel)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACaH0yPg",
+        "name": "squad:cheritto",
+        "description": "Assigned to Cheritto (TUI Engineer)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACaZpgIg",
+        "name": "release:defer",
+        "description": "Deferred past next release",
+        "color": "D4C5F9"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACagrkrQ",
+        "name": "status:backlog",
+        "description": "Backlog item",
+        "color": "c5def5"
+      }
+    ],
+    "number": 208,
+    "title": "Doc request - how to build an autonomous agent on Squad"
+  },
+  {
+    "assignees": [],
+    "body": "## Summary\n\nUsers migrating from v0.5.4 to v0.8.x ΓÇö particularly those who installed Squad via `npx` to a repo root rather than globally ΓÇö encounter several friction points that make the migration feel broken even when following the guide.\n\n## What needs improving\n\n### 1. Shell blocks `/init` when `.squad/` is missing (circular error)\nWhen `.squad/team.md` doesn't exist, the interactive shell shows _\"Run /init to create your team first\"_ and returns early ΓÇö before the `/init` command can execute. The message is accurate but the fix requires `/init` to be runnable in the first place.\n\n**Fix:** scaffold `.squad/` with `sdkInitSquad()` when `team.md` is absent, then fall through to the existing `handleInitCast` path.\n\n### 2. `scrub-emails` defaults to `.ai-team/` (stale default)\n`cli-entry.ts` still defaults to `.ai-team/` for the `scrub-emails` command help text and argument fallback ΓÇö the directory was renamed to `.squad/` in v0.8.\n\n### 3. No automated migration command\nThere is currently no `squad migrate` command. Users must manually back up, delete, and reinitialise ΓÇö and the steps are different depending on whether they installed globally, locally, or via `npx`.\n\n**New command:** `squad migrate [--dry-run] [--backup-dir <path>]` that backs up `.squad/`, removes squad-owned scaffold files, runs a fresh `sdkInitSquad()`, and restores user-owned files (agents, decisions, routing, team.md, skills).\n\n### 4. Docs reference the removed `npx github:bradygaster/squad` distribution\n`docs/scenarios/upgrading.md` and `docs/scenarios/troubleshooting.md` still use the old GitHub-hosted install command throughout. The correct package is `@bradygaster/squad-cli`.\n\n### 5. Node.js version inconsistency across docs\n- `docs/get-started/migration.md` says \"Node.js 18 or later\"\n- `docs/scenarios/troubleshooting.md` says \"22.0.0\"\n- Actual `package.json` engines field: `>=20.0.0`\n\n### 6. Migration guide only covers global install\nThe migration guide (`docs/get-started/migration.md`) has no steps for local (`npm install --save-dev`) or `npx` users. Install commands are also pinned to `@0.8.18`.\n\n## Acceptance criteria\n\n- [ ] Shell `/init \"description\"` works even when `.squad/` has been deleted\n- [ ] `scrub-emails` defaults to `.squad/`\n- [ ] `squad migrate` command exists, documented, and tested\n- [ ] `docs/scenarios/upgrading.md` uses `@bradygaster/squad-cli` only\n- [ ] `docs/scenarios/troubleshooting.md` corrected (commands + Node.js version)\n- [ ] `docs/get-started/migration.md` covers global, local, and `npx` install paths; uses `@latest`; documents `squad migrate`\n- [ ] All existing tests pass; new tests added for migrate command and updated shell behavior",
+    "createdAt": "2026-03-05T02:27:41Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3XQ",
+        "name": "squad:mcmanus",
+        "description": "Assigned to McManus (DevRel)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3kA",
+        "name": "squad:fenster",
+        "description": "Assigned to Fenster (Core Dev)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3wA",
+        "name": "squad:hockney",
+        "description": "Assigned to Hockney (Tester)",
+        "color": "9B8FCC"
+      }
+    ],
+    "number": 197,
+    "title": "Improve migration experience: fix shell init, add migrate command, update docs for all install methods"
+  },
+  {
+    "assignees": [],
+    "body": "## Problem\n\nWhen multiple developers work on a feature branch with a shared squad, handing over context to the next developer requires manually telling the squad to \"prep for handover.\" Without this prompt, the incoming developer gets no proactive briefing ΓÇö they have to remember to ask \"catch me up\" or re-explain the project state to the squad.\n\nThe data to support handover already exists (Scribe commits session logs, decisions, and agent histories to the branch), but nobody synthesizes it into a handover-ready format, and the coordinator does not deep-read it when a new developer arrives.\n\n## Root Cause (5 interconnected gaps)\n\n1. **Session catch-up is intentionally lazy** ΓÇö the coordinator is told \"Do NOT scan logs on every session start\" and only does a shallow 2-3 sentence summary even when it detects a different user.\n2. **`now.md` is never updated at session end** ΓÇö it is read at session start but the Scribe has no task to write handover state back. It goes stale immediately after init.\n3. **`now.md` lacks handover fields** ΓÇö the template only has `focus_area` and `active_issues`. No space for what was done, what is in progress, what is pending, blockers, or per-agent status.\n4. **No proactive handover detection** ΓÇö detecting a different user existed but the response was the same shallow catch-up as an explicit ask.\n5. **No routing trigger for manual handover prep** ΓÇö developers had to explain the concept of handover in natural language every time.\n\n## Proposed Solution\n\n1. **Enhanced `now.md` template** ΓÇö Add `last_user`, `session_count`, a full \"Last Session Summary\" section (done/in-progress/pending/decisions/blockers), and an \"Agent Last Touched\" table.\n2. **Scribe session-end update** ΓÇö New Scribe task that updates `now.md` with comprehensive handover state after every batch of agent work. This becomes the primary handover artifact.\n3. **Deep handover briefing on user change** ΓÇö Split session catch-up: same user gets lazy summary, different user gets automatic deep briefing from `now.md` (proactive, no prompt needed).\n4. **Manual handover routing trigger** ΓÇö Routing entries for \"prep for handover\", \"wrap up\", \"I am done for today\", \"session done\".\n\n## Files Changed\n\n| File | Change |\n|------|--------|\n| `templates/identity/now.md` | Enhanced template with handover fields |\n| `index.js` | Updated inline `now.md` scaffold to match |\n| `.github/agents/squad.agent.md` | Handover Protocol section, routing trigger, Scribe task |\n| `templates/scribe-charter.md` | Added task 5: write handover state to `now.md` |\n| `docs/guide.md` | Added identity layer to directory tree, handover subsection |\n| `docs/features/memory.md` | Added \"Developer Handover\" section |\n| `docs/tour-first-session.md` | Added handover to tips and next steps |\n| `docs/sample-prompts.md` | Added \"Developer Handover\" prompt section |\n| `docs/whatsnew.md` | Updated identity layer description |\n| `CHANGELOG.md` | Updated identity layer description |\n| `test/init-flow.test.js` | Updated tests for new `now.md` fields |\n| `.squad/identity/now.md` | Updated live file to match new template |\n\n## Testing\n\nAll 95 tests pass (`npm test`).\n",
+    "createdAt": "2026-03-03T16:03:41Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3KA",
+        "name": "squad:keaton",
+        "description": "Assigned to Keaton (Lead)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3wA",
+        "name": "squad:hockney",
+        "description": "Assigned to Hockney (Tester)",
+        "color": "9B8FCC"
+      }
+    ],
+    "number": 180,
+    "title": "feat: Automatic developer handover via identity/now.md"
+  },
+  {
+    "assignees": [],
+    "body": "## Problem\n\n`upgrade --migrate-directory` uses `fs.renameSync()` to rename `.ai-team/` ΓåÆ `.squad/`, which causes three silent git issues:\n\n1. **History loss**: Git sees the rename as a delete + add, not a move. `git log --follow` stops working for all files in the directory.\n2. **Unstaged changes**: The rename is not staged. Users may not realize they have uncommitted changes in the new location.\n3. **Guard CI will block**: The squad-main-guard workflow explicitly blocks `.squad/**` from `main`/`preview` branches. Users who commit `.squad/` to a PR targeting main will hit a CI failure with no explanation.\n\n## Suggested Fix\n\nAfter the migration completes, print clear guidance:\n\n```\nΓ£ô Renamed .ai-team/ ΓåÆ .squad/\n\nΓÜá∩╕Å  Git note: this rename appears as delete+add in git history.\n   To preserve file history, use: git mv .ai-team .squad (before running this command next time)\n\nNext steps:\n  git add -A\n  git commit -m \"chore: migrate .ai-team/ ΓåÆ .squad/\"\n\nNote: .squad/ should NOT be committed to main/preview ΓÇö keep it on feature branches.\n```\n\nAdditionally, consider using `git mv` via `child_process` instead of `fs.renameSync` when inside a git repo, which preserves rename tracking.\n\n**Found by:** Kobayashi during 0.5.0 diagnostic investigation on SqncR.",
+    "createdAt": "2026-02-20T11:23:55Z",
+    "labels": [
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX1zg_Q",
+        "name": "squad",
+        "description": "Squad triage inbox ΓÇö Lead will assign to a member",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX9aFLw",
+        "name": "go:needs-research",
+        "description": "Needs investigation",
+        "color": "FBCA04"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-Iz_Q",
+        "name": "type:feature",
+        "description": "New capability",
+        "color": "DDD1F2"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3kA",
+        "name": "squad:fenster",
+        "description": "Assigned to Fenster (Core Dev)",
+        "color": "9B8FCC"
+      },
+      {
+        "id": "LA_kwDORJ3-vM8AAAACX-I3wA",
+        "name": "squad:hockney",
+        "description": "Assigned to Hockney (Tester)",
+        "color": "9B8FCC"
+      }
+    ],
+    "number": 126,
+    "title": "ux: upgrade --migrate-directory should warn about git rename history loss and unstaged changes"
+  }
+]

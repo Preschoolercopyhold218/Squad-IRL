@@ -821,3 +821,5 @@ pm start works.
 - Dual-site scraping (Redfin + Zillow in separate tabs) is a clean pattern: open browser → scrape site 1 → open new tab → scrape site 2 → close browser. User gets two "press Enter" checkpoints, one per site. Graceful fallback if second site fails.
 - Realtor CMA sample is intentionally distinct from real-estate-analyzer: same data sources but different audience (realtors vs investors), different agents (Market Scanner/Comp Analyst/Presentation Builder/Neighborhood Profiler vs Property Evaluator/Investment Analyst/etc.), different output (presentation-ready sales package vs ROI scorecard). The differentiation is in the agent charters and prompt framing.
 - PropertyData interface with `source` field enables clean cross-referencing when both Redfin and Zillow return data for overlapping listings
+
+📌 Team update (2026-03-08T15:19:17Z): Bug-triage sample issue fetch limit reduced to 5 per run, preventing oversized prompts and processing failures — decided by Fenster
