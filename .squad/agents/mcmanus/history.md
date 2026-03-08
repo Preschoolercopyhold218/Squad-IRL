@@ -1075,3 +1075,24 @@ Multi-agent build of Rock-Paper-Scissors game with 10 AI strategies, Docker infr
 
 📌 Team update (2026-03-08T13:21:18Z): LinkedIn Monitor sample completed — full TypeScript implementation, four-agent squad.config.ts, URL-first action design pattern — decided by Fenster and Verbal
 
+
+### 2026-03-08: Appointment Scheduler sample — transformed to real Squad pattern
+
+**Status:** Complete. Replaced hardcoded demo with real Squad SDK sample following gmail/ gold standard.
+
+**What changed:**
+- Deleted 500+ line hardcoded algorithm (fake calendars, scoring math, ASCII tables)
+- Created `squad.config.ts` with 4 agents: Constraint Parser, Timezone Coordinator, Slot Ranker, Meeting Formatter
+- Created `scheduler-input.ts` for readline-based user input with example scenarios
+- Created `index.ts` following gmail/ pattern: banner → user input → SquadClient → streaming → closing with extension ideas
+- Updated `package.json` to add `@bradygaster/squad-sdk` dependency, removed `@types/node`
+- Updated `tsconfig.json` to match gmail/ config (bundler resolution, skipLibCheck)
+- Added `.gitignore` and `README.md`
+
+**Key decisions:**
+- Text-based conversational input (no Playwright, no external APIs) — user describes scheduling need, squad analyzes
+- Read-only: suggests optimal slots, doesn't book anything
+- Extension ideas point toward Google Calendar API, Outlook integration, .ics generation
+- All four agents have clear domain boundaries matching the gmail/ classifier/summarizer/advisor/ranker pattern
+
+**Verified:** `npm install` + `npx tsc --noEmit` pass clean.

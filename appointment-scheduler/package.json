@@ -1,14 +1,17 @@
 {
   "name": "appointment-scheduler",
   "version": "1.0.0",
+  "private": true,
+  "description": "A Squad-powered scheduling assistant — describe your meeting needs in plain text and get optimized time slot suggestions across timezones.",
   "type": "module",
-  "description": "Multi-agent appointment scheduler with timezone-aware calendar intersection",
   "scripts": {
     "start": "npx tsx index.ts"
   },
+  "dependencies": {
+    "@bradygaster/squad-sdk": "^0.8.0"
+  },
   "devDependencies": {
-    "@types/node": "^22.19.15",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.7.0"
   }
 }
