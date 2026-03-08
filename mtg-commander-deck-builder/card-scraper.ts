@@ -103,7 +103,7 @@ export async function scrapeRecommendedCards(page: Page): Promise<EDHRECCard[]> 
       mana: 'land',
     };
 
-    function inferCategory(sectionText: string): string {
+    const inferCategory = (sectionText: string): string => {
       const lower = sectionText.toLowerCase();
       for (const [keyword, cat] of Object.entries(categoryKeywords)) {
         if (lower.includes(keyword)) return cat;
@@ -111,7 +111,7 @@ export async function scrapeRecommendedCards(page: Page): Promise<EDHRECCard[]> 
       return 'other';
     }
 
-    function parseInclusionRate(text: string): number {
+    const parseInclusionRate = (text: string): number => {
       const match = text.match(/(\d+)%/);
       return match ? parseInt(match[1]!, 10) : 0;
     }
