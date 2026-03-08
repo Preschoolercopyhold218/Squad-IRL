@@ -219,7 +219,18 @@ async function main(): Promise<void> {
 
   const rl = createInterface({ input: stdin, output: stdout });
 
-  // 1. Launch Playwright browser
+  // 1. Ask what to search for
+  const searchQuery = await rl.question(
+    `${C.cyan}  What product or category are you looking for? ${C.reset}`
+  );
+
+  if (!searchQuery.trim()) {
+    console.log(`${C.yellow}  No search query entered. Exiting.${C.reset}`);
+    rl.close();
+    return;
+  }
+
+  // 2. Launch Playwright browser
   console.log();
   console.log(`${C.magenta}  �� Launching browser...${C.reset}`);
 
@@ -227,7 +238,7 @@ async function main(): Promise<void> {
   try {
     const result = await launchBrowser();
     page = result.page;
-    await navigateToStore(page);
+    await navigateToStore(page, searchQuery.trim());
   } catch (err: any) {
     console.error();
     console.error(`${C.red}${C.bold}  Failed to launch browser.${C.reset}`);
@@ -239,10 +250,10 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // 2. Scrape loop — user navigates to pages and presses Enter to scrape
+  // 3. Scrape loop — user navigates to pages and presses Enter to scrape
   console.log();
-  console.log(`${C.green}  🛒 Browser is open.${C.reset}`);
-  console.log(`${C.dim}  Navigate to any shopping page (Amazon wishlist, Best Buy deals, etc.)${C.reset}`);
+  console.log(`${C.green}  🛒 Browser is open — auto-searched for "${searchQuery.trim()}".${C.reset}`);
+  console.log(`${C.dim}  Navigate to other pages if needed (Amazon wishlist, Best Buy deals, etc.)${C.reset}`);
   console.log(`${C.dim}  Press Enter to scrape the current page. Type "done" when finished.${C.reset}`);
   console.log();
 

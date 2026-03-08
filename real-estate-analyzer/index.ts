@@ -218,7 +218,18 @@ async function main(): Promise<void> {
 
   const rl = createInterface({ input: stdin, output: stdout });
 
-  // 1. Launch Playwright browser
+  // 1. Ask for the target area
+  const targetArea = await rl.question(
+    `${C.cyan}  Enter the target area (city, zip, or neighborhood): ${C.reset}`
+  );
+
+  if (!targetArea.trim()) {
+    console.log(`${C.yellow}  No area entered. Exiting.${C.reset}`);
+    rl.close();
+    return;
+  }
+
+  // 2. Launch Playwright browser
   console.log();
   console.log(`${C.magenta}  🌐 Launching browser...${C.reset}`);
 
@@ -226,7 +237,7 @@ async function main(): Promise<void> {
   try {
     const result = await launchBrowser();
     page = result.page;
-    await navigateToSearch(page);
+    await navigateToSearch(page, targetArea.trim());
   } catch (err: any) {
     console.error();
     console.error(`${C.red}${C.bold}  Failed to launch browser.${C.reset}`);
@@ -238,10 +249,10 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // 2. User navigates to their search results
+  // 3. User reviews the search results
   console.log();
-  console.log(`${C.green}  🏘️  Browser is open — navigate to your search results.${C.reset}`);
-  console.log(`${C.dim}  Go to Redfin or Zillow and search for homes in your target area.${C.reset}`);
+  console.log(`${C.green}  🏘️  Browser is open — auto-searched for "${targetArea}".${C.reset}`);
+  console.log(`${C.dim}  Adjust filters if needed (e.g. recently sold, price range).${C.reset}`);
   console.log(`${C.dim}  Make sure the search results page with listing cards is visible.${C.reset}`);
   await rl.question(`${C.cyan}  Press Enter when the listings are visible... ${C.reset}`);
 

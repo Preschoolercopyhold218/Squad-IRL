@@ -34,13 +34,21 @@ export async function launchBrowser(): Promise<{ browser: Browser; page: Page }>
 }
 
 /**
- * Navigate to a popular job search starting page.
+ * Navigate to Indeed and auto-search for the given query.
  */
-export async function navigateToJobBoard(page: Page): Promise<void> {
+export async function navigateToJobBoard(page: Page, searchQuery: string): Promise<void> {
   await page.goto('https://www.indeed.com', {
     waitUntil: 'domcontentloaded',
     timeout: LOAD_TIMEOUT_MS,
   });
+
+  const searchInput = page.locator('#text-input-what, input[name="q"], input[id*="what"], input[placeholder*="Job title"]').first();
+  await searchInput.waitFor({ state: 'visible', timeout: 15_000 });
+  await searchInput.click();
+  await searchInput.fill(searchQuery);
+  await page.waitForTimeout(1500);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(5000);
 }
 
 /**

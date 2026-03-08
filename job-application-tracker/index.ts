@@ -223,6 +223,17 @@ async function main(): Promise<void> {
   console.log(`${C.dim}  (e.g., "Senior frontend engineer, remote, $150-180k, React/TypeScript")${C.reset}`);
   const userPreferences = await rl.question(`${C.cyan}  > ${C.reset}`);
 
+  console.log();
+  console.log(`${C.cyan}  What job title or keywords should we search for?${C.reset}`);
+  console.log(`${C.dim}  (e.g., "senior frontend engineer", "react developer", "devops")${C.reset}`);
+  const searchQuery = await rl.question(`${C.cyan}  > ${C.reset}`);
+
+  if (!searchQuery.trim()) {
+    console.log(`${C.yellow}  No search query entered. Exiting.${C.reset}`);
+    rl.close();
+    return;
+  }
+
   // 2. Launch Playwright browser and navigate to a job board
   console.log();
   console.log(`${C.magenta}  🌐 Launching browser and opening Indeed...${C.reset}`);
@@ -232,7 +243,7 @@ async function main(): Promise<void> {
   try {
     const result = await launchBrowser();
     page = result.page;
-    await navigateToJobBoard(page);
+    await navigateToJobBoard(page, searchQuery.trim());
   } catch (err: any) {
     console.error();
     console.error(`${C.red}${C.bold}  Failed to launch browser.${C.reset}`);
@@ -244,10 +255,10 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // 3. Wait for the user to search and have results visible
+  // 3. Wait for the user to review results
   console.log();
-  console.log(`${C.green}  🔍 Browser is open.${C.reset}`);
-  console.log(`${C.dim}  Search for jobs, browse listings, and get the results page loaded.${C.reset}`);
+  console.log(`${C.green}  🔍 Browser is open — auto-searched for "${searchQuery.trim()}".${C.reset}`);
+  console.log(`${C.dim}  Adjust filters or navigate to another job board if needed.${C.reset}`);
   console.log(`${C.dim}  You can navigate to any job board — we'll scrape whatever is visible.${C.reset}`);
   await rl.question(`${C.cyan}  Press Enter when job listings are visible and ready to scrape... ${C.reset}`);
 

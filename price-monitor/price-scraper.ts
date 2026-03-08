@@ -33,13 +33,21 @@ export async function launchBrowser(): Promise<{ browser: Browser; page: Page }>
 }
 
 /**
- * Navigate to a default shopping starting page.
+ * Navigate to Amazon and auto-search for the given query.
  */
-export async function navigateToStore(page: Page): Promise<void> {
+export async function navigateToStore(page: Page, searchQuery: string): Promise<void> {
   await page.goto('https://www.amazon.com', {
     waitUntil: 'domcontentloaded',
     timeout: LOAD_TIMEOUT_MS,
   });
+
+  const searchInput = page.locator('#twotabsearchtextbox, input[type="search"], input[name="field-keywords"], input[placeholder*="Search"]').first();
+  await searchInput.waitFor({ state: 'visible', timeout: 15_000 });
+  await searchInput.click();
+  await searchInput.fill(searchQuery);
+  await page.waitForTimeout(1500);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(5000);
 }
 
 /**
@@ -67,13 +75,13 @@ export async function scrapeProducts(page: Page): Promise<ScrapedProduct[]> {
 
     const seen = new Set<string>();
 
-    function addProduct(
+    const addProduct = (
       name: string,
       price: string,
       url: string,
       onSale: boolean,
       originalPrice: string,
-    ): void {
+    ): void => {
       const trimName = name.trim().slice(0, 300);
       const trimPrice = price.trim();
       if (!trimName || trimName.length < 3) return;

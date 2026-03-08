@@ -34,10 +34,18 @@ export async function launchBrowser(): Promise<{ browser: Browser; page: Page }>
 }
 
 /**
- * Navigate to a starting search page (Redfin by default).
+ * Navigate to Redfin and auto-search for the given query.
  */
-export async function navigateToSearch(page: Page): Promise<void> {
+export async function navigateToSearch(page: Page, searchQuery: string): Promise<void> {
   await page.goto('https://www.redfin.com', { waitUntil: 'domcontentloaded', timeout: LOAD_TIMEOUT_MS });
+
+  const searchInput = page.locator('#search-box-input, input[type="search"], input[placeholder*="Search"], input[placeholder*="Address"]').first();
+  await searchInput.waitFor({ state: 'visible', timeout: 15_000 });
+  await searchInput.click();
+  await searchInput.fill(searchQuery);
+  await page.waitForTimeout(1500);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(5000);
 }
 
 /**
@@ -61,9 +69,8 @@ export async function scrapeListings(page: Page): Promise<PropertyListing[]> {
     }[] = [];
 
     // ── Helper: extract text or empty string ──
-    function text(el: Element | null | undefined): string {
-      return el?.textContent?.trim() ?? '';
-    }
+    const text = (el: Element | null | undefined): string =>
+      el?.textContent?.trim() ?? '';
 
     // ════════════════════════════════════════════════════════════════════════
     // Strategy 1: Redfin listing cards
