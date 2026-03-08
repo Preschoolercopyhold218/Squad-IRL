@@ -18,6 +18,10 @@ import {
   formatPropertiesForPrompt,
   closeBrowser,
 } from './realtor-scraper.js';
+import { initSquadTelemetry } from '@bradygaster/squad-sdk';
+
+// Initialize OpenTelemetry (sends traces/metrics to Aspire when OTEL_EXPORTER_OTLP_ENDPOINT is set)
+const telemetry = initSquadTelemetry();
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ANSI helpers
@@ -363,6 +367,8 @@ async function main(): Promise<void> {
   console.log(`${C.white}  Great listings don't sell themselves — great agents with great data do.${C.reset}`);
   console.log(`${C.white}  The Squad SDK makes it easy to build the tools that set you apart.${C.reset}`);
   console.log();
+
+  await telemetry.shutdown();
 
   try {
     await session.close();
