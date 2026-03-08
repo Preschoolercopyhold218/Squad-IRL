@@ -890,3 +890,7 @@ pm start works.
 - Telemetry wiring for samples should use RuntimeEventBus + CostTracker with manual usage forwarding to keep squad.tokens.* metrics accurate and cost estimation client-side.
 - The usage hook pattern is: session.on('usage') → recordTokenUsage(...) → eventBus.emit({ type: 'session:message', payload: { inputTokens, outputTokens, model, estimatedCost } }).
 - Print costTracker.formatSummary() before telemetry shutdown to align console output with Aspire metrics.
+
+- **esbuild `__name` bug in Playwright `page.evaluate()`:** esbuild injects `__name()` decorators on `function` declarations. Inside `page.evaluate()` callbacks, those decorators reference a Node.js-context variable that doesn't exist in the browser. Fix: convert all `function` declarations inside evaluate blocks to arrow functions (`const fn = (...) => ...`).
+- **Playwright auto-search pattern for Redfin/Zillow:** Use `page.locator()` with multiple CSS selectors (comma-separated) + `.first()`, then `fill()` + `keyboard.press('Enter')` with brief waits for autocomplete debounce. Keep a user confirmation pause after auto-navigation so they can adjust filters.
+- **Key file paths:** `realtor-sales-package/realtor-scraper.ts` (Playwright scraping + navigation), `realtor-sales-package/index.ts` (CLI orchestrator).

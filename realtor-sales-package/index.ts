@@ -233,7 +233,7 @@ async function main(): Promise<void> {
   try {
     const result = await launchBrowser();
     redfinPage = result.page;
-    await navigateToRedfin(redfinPage);
+    await navigateToRedfin(redfinPage, targetArea.trim());
   } catch (err: any) {
     console.error();
     console.error(`${C.red}${C.bold}  Failed to launch browser.${C.reset}`);
@@ -247,9 +247,9 @@ async function main(): Promise<void> {
 
   // 3. User searches on Redfin
   console.log();
-  console.log(`${C.green}  🔍 Redfin is open — search for "${targetArea}" and view the results.${C.reset}`);
-  console.log(`${C.dim}  Filter for recently sold homes (last 6 months) for the best comps.${C.reset}`);
-  await rl.question(`${C.cyan}  Press Enter when Redfin search results are visible... ${C.reset}`);
+  console.log(`${C.green}  🔍 Redfin is open — auto-searched for "${targetArea}".${C.reset}`);
+  console.log(`${C.dim}  Adjust filters if needed (e.g. recently sold, last 6 months).${C.reset}`);
+  await rl.question(`${C.cyan}  Press Enter when Redfin results look good... ${C.reset}`);
 
   // 4. Scrape Redfin
   console.log();
@@ -263,7 +263,7 @@ async function main(): Promise<void> {
 
   let zillowPage: Awaited<ReturnType<typeof navigateToZillow>>;
   try {
-    zillowPage = await navigateToZillow(redfinPage);
+    zillowPage = await navigateToZillow(redfinPage, targetArea.trim());
   } catch (err: any) {
     console.error(`${C.yellow}  Could not open Zillow: ${err?.message ?? err}${C.reset}`);
     console.log(`${C.dim}  Continuing with Redfin data only.${C.reset}`);
@@ -275,9 +275,9 @@ async function main(): Promise<void> {
   if (zillowPage) {
     // 6. User searches on Zillow
     console.log();
-    console.log(`${C.green}  🔍 Zillow is open — search for "${targetArea}" in the new tab.${C.reset}`);
-    console.log(`${C.dim}  Look for recently sold homes to match the Redfin data.${C.reset}`);
-    await rl.question(`${C.cyan}  Press Enter when Zillow search results are visible... ${C.reset}`);
+    console.log(`${C.green}  🔍 Zillow is open — auto-searched for "${targetArea}".${C.reset}`);
+    console.log(`${C.dim}  Adjust filters if needed (e.g. recently sold).${C.reset}`);
+    await rl.question(`${C.cyan}  Press Enter when Zillow results look good... ${C.reset}`);
 
     // 7. Scrape Zillow
     console.log();

@@ -38,19 +38,38 @@ export async function launchBrowser(): Promise<{ browser: Browser; page: Page }>
 }
 
 /**
- * Navigate to Redfin search. Returns the page once navigation completes.
+ * Navigate to Redfin and auto-search for the given query.
  */
-export async function navigateToRedfin(page: Page): Promise<void> {
+export async function navigateToRedfin(page: Page, searchQuery: string): Promise<void> {
   await page.goto('https://www.redfin.com', { waitUntil: 'domcontentloaded', timeout: LOAD_TIMEOUT_MS });
+
+  // Type the query into Redfin's search box and submit
+  const searchInput = page.locator('#search-box-input, input[type="search"], input[placeholder*="Search"], input[placeholder*="Address"]').first();
+  await searchInput.waitFor({ state: 'visible', timeout: 15_000 });
+  await searchInput.click();
+  await searchInput.fill(searchQuery);
+  await page.waitForTimeout(1500);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(5000);
 }
 
 /**
- * Navigate to Zillow search. Opens in a new tab and returns it.
+ * Navigate to Zillow and auto-search for the given query. Opens in a new tab.
  */
-export async function navigateToZillow(page: Page): Promise<Page> {
+export async function navigateToZillow(page: Page, searchQuery: string): Promise<Page> {
   const context = page.context();
   const zillowPage = await context.newPage();
   await zillowPage.goto('https://www.zillow.com', { waitUntil: 'domcontentloaded', timeout: LOAD_TIMEOUT_MS });
+
+  // Type the query into Zillow's search box and submit
+  const searchInput = zillowPage.locator('input[type="search"], input[placeholder*="Search"], input[placeholder*="Address"], #search-box-input').first();
+  await searchInput.waitFor({ state: 'visible', timeout: 15_000 });
+  await searchInput.click();
+  await searchInput.fill(searchQuery);
+  await zillowPage.waitForTimeout(1500);
+  await zillowPage.keyboard.press('Enter');
+  await zillowPage.waitForTimeout(5000);
+
   return zillowPage;
 }
 
@@ -75,9 +94,8 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
       details: string;
     }[] = [];
 
-    function text(el: Element | null | undefined): string {
-      return el?.textContent?.trim() ?? '';
-    }
+    const text = (el: Element | null | undefined): string =>
+      el?.textContent?.trim() ?? '';
 
     // Strategy 1: Redfin HomeCard selectors
     const cards = document.querySelectorAll(
@@ -241,9 +259,8 @@ export async function scrapeZillow(page: Page): Promise<PropertyData[]> {
       details: string;
     }[] = [];
 
-    function text(el: Element | null | undefined): string {
-      return el?.textContent?.trim() ?? '';
-    }
+    const text = (el: Element | null | undefined): string =>
+      el?.textContent?.trim() ?? '';
 
     // Strategy 1: Zillow property cards
     const cards = document.querySelectorAll(
