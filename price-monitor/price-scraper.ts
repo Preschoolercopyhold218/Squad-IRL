@@ -75,13 +75,15 @@ export async function scrapeProducts(page: Page): Promise<ScrapedProduct[]> {
 
     const seen = new Set<string>();
 
-    const addProduct = (
+    // Helper object avoids esbuild __name injection for arrow functions
+    // inside page.evaluate (browser context has no __name global).
+    const h = { add(
       name: string,
       price: string,
       url: string,
       onSale: boolean,
       originalPrice: string,
-    ): void => {
+    ): void {
       const trimName = name.trim().slice(0, 300);
       const trimPrice = price.trim();
       if (!trimName || trimName.length < 3) return;
@@ -107,7 +109,7 @@ export async function scrapeProducts(page: Page): Promise<ScrapedProduct[]> {
         onSale,
         originalPrice: originalPrice.trim(),
       });
-    }
+    } };
 
     // ── Strategy 1: Amazon product cards ──
     const amazonCards = document.querySelectorAll(
@@ -148,7 +150,7 @@ export async function scrapeProducts(page: Page): Promise<ScrapedProduct[]> {
       const originalPrice = origEl?.textContent?.trim() ?? '';
       const onSale = !!originalPrice;
 
-      addProduct(name, price, url, onSale, originalPrice);
+      h.add(name, price, url, onSale, originalPrice);
     }
 
     // ── Strategy 2: Amazon wishlist items ──
@@ -165,7 +167,7 @@ export async function scrapeProducts(page: Page): Promise<ScrapedProduct[]> {
           el.querySelector('.a-color-price');
         const price = priceEl?.textContent?.trim() ?? '';
         const url = nameEl?.getAttribute('href') ?? '';
-        addProduct(name, price, url, false, '');
+        h.add(name, price, url, false, '');
       }
     }
 
@@ -181,7 +183,7 @@ export async function scrapeProducts(page: Page): Promise<ScrapedProduct[]> {
         const url = nameEl?.getAttribute('href') ?? '';
         const origEl = el.querySelector('.pricing-price__regular-price, [class*="was-price"]');
         const originalPrice = origEl?.textContent?.trim() ?? '';
-        addProduct(name, price, url, !!originalPrice, originalPrice);
+        h.add(name, price, url, !!originalPrice, originalPrice);
       }
     }
 
@@ -206,7 +208,7 @@ export async function scrapeProducts(page: Page): Promise<ScrapedProduct[]> {
         const linkEl = el.querySelector('a[href]');
         const url = linkEl?.getAttribute('href') ?? '';
 
-        addProduct(name, price, url, false, '');
+        h.add(name, price, url, false, '');
       }
     }
 
@@ -232,7 +234,7 @@ export async function scrapeProducts(page: Page): Promise<ScrapedProduct[]> {
         const linkEl = parent.querySelector('a[href]');
         const url = linkEl?.getAttribute('href') ?? '';
 
-        addProduct(name, match[0], url, false, '');
+        h.add(name, match[0], url, false, '');
       }
     }
 
