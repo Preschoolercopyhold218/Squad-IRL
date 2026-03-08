@@ -94,8 +94,7 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
       details: string;
     }[] = [];
 
-    const text = (el: Element | null | undefined): string =>
-      el?.textContent?.trim() ?? '';
+    const h = { text: (el: Element | null | undefined): string => el?.textContent?.trim() ?? '' };
 
     // Strategy 1: Redfin HomeCard selectors
     const cards = document.querySelectorAll(
@@ -104,22 +103,22 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
 
     for (const card of cards) {
       const address =
-        text(card.querySelector('.homeAddressV2, .link-and-anchor, [data-rf-test-id="abp-homeinfo-homeAddress"]')) ||
-        text(card.querySelector('.homecardV2 .homeAddressV2')) ||
-        text(card.querySelector('a[href*="/home/"]'));
+        h.text(card.querySelector('.homeAddressV2, .link-and-anchor, [data-rf-test-id="abp-homeinfo-homeAddress"]')) ||
+        h.text(card.querySelector('.homecardV2 .homeAddressV2')) ||
+        h.text(card.querySelector('a[href*="/home/"]'));
 
       const price =
-        text(card.querySelector('.homecardV2 .homecardV2Price, .bp-Homecard__Price--value, .priceEstimate, span[data-rf-test-id="abp-price"]')) ||
-        text(card.querySelector('.price'));
+        h.text(card.querySelector('.homecardV2 .homecardV2Price, .bp-Homecard__Price--value, .priceEstimate, span[data-rf-test-id="abp-price"]')) ||
+        h.text(card.querySelector('.price'));
 
       // Stats row: beds, baths, sqft
       const statsEls = card.querySelectorAll('.HomeStatsV2 .stats, .bp-Homecard__Stats--item, .HomeStatsV2 span');
       const statsTexts: string[] = [];
       for (const s of statsEls) {
-        const t = text(s);
+        const t = h.text(s);
         if (t) statsTexts.push(t);
       }
-      const statsLine = statsTexts.join(' ') || text(card.querySelector('.HomeStatsV2'));
+      const statsLine = statsTexts.join(' ') || h.text(card.querySelector('.HomeStatsV2'));
 
       let beds = '';
       let baths = '';
@@ -137,7 +136,7 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
       let daysOnMarket = '';
       const domEl = card.querySelector('.dom, .timeOnRedfin, [data-rf-test-id="abp-dom"]');
       if (domEl) {
-        const domText = text(domEl);
+        const domText = h.text(domEl);
         const domMatch = domText.match(/(\d+)\s*(?:day|d)/i);
         if (domMatch) daysOnMarket = domMatch[1]!;
       }
@@ -145,19 +144,19 @@ export async function scrapeRedfin(page: Page): Promise<PropertyData[]> {
       // Price per sqft
       let pricePerSqft = '';
       const priceSqftEl = card.querySelector('.pricePerSqFt, .price-sqft');
-      if (priceSqftEl) pricePerSqft = text(priceSqftEl);
+      if (priceSqftEl) pricePerSqft = h.text(priceSqftEl);
 
       // Status (Active, Pending, Sold, etc.)
       let status = '';
       const statusEl = card.querySelector('.labelLine, .homecardV2Label, .listingRemarks');
-      if (statusEl) status = text(statusEl);
+      if (statusEl) status = h.text(statusEl);
 
       // Additional details
       const detailParts: string[] = [];
       const typeEl = card.querySelector('.HomeStatsV2 .propertyType, .property-type');
-      if (typeEl) detailParts.push(text(typeEl));
+      if (typeEl) detailParts.push(h.text(typeEl));
       const brokerEl = card.querySelector('.broker, .branding');
-      if (brokerEl) detailParts.push(text(brokerEl));
+      if (brokerEl) detailParts.push(h.text(brokerEl));
 
       if (address || price) {
         results.push({
@@ -259,8 +258,7 @@ export async function scrapeZillow(page: Page): Promise<PropertyData[]> {
       details: string;
     }[] = [];
 
-    const text = (el: Element | null | undefined): string =>
-      el?.textContent?.trim() ?? '';
+    const h = { text: (el: Element | null | undefined): string => el?.textContent?.trim() ?? '' };
 
     // Strategy 1: Zillow property cards
     const cards = document.querySelectorAll(
@@ -269,17 +267,17 @@ export async function scrapeZillow(page: Page): Promise<PropertyData[]> {
 
     for (const card of cards) {
       const address =
-        text(card.querySelector('[data-test="property-card-addr"], address, .list-card-addr, .property-card-link')) ||
-        text(card.querySelector('a[data-test="property-card-link"]'));
+        h.text(card.querySelector('[data-test="property-card-addr"], address, .list-card-addr, .property-card-link')) ||
+        h.text(card.querySelector('a[data-test="property-card-link"]'));
 
       const price =
-        text(card.querySelector('[data-test="property-card-price"], .list-card-price')) ||
-        text(card.querySelector('span[data-test="property-card-price"]'));
+        h.text(card.querySelector('[data-test="property-card-price"], .list-card-price')) ||
+        h.text(card.querySelector('span[data-test="property-card-price"]'));
 
       const detailsEl = card.querySelector(
         '[data-test="property-card-details"], .list-card-details, .StyledPropertyCardDataArea-anchor'
       );
-      const detailText = text(detailsEl);
+      const detailText = h.text(detailsEl);
 
       let beds = '';
       let baths = '';
@@ -297,7 +295,7 @@ export async function scrapeZillow(page: Page): Promise<PropertyData[]> {
       let daysOnMarket = '';
       const domEl = card.querySelector('.days-on-zillow, [data-test="days-on-zillow"]');
       if (domEl) {
-        const domText = text(domEl);
+        const domText = h.text(domEl);
         const domMatch = domText.match(/(\d+)\s*(?:day|d)/i);
         if (domMatch) daysOnMarket = domMatch[1]!;
       }
@@ -305,7 +303,7 @@ export async function scrapeZillow(page: Page): Promise<PropertyData[]> {
       // Status badge
       let status = '';
       const statusEl = card.querySelector('.StyledPropertyCardBadge, .list-card-statusText, [class*="StatusBadge"]');
-      if (statusEl) status = text(statusEl);
+      if (statusEl) status = h.text(statusEl);
 
       if (address || price) {
         results.push({
