@@ -138,7 +138,7 @@ async function sendAndStream(
 
   try {
     if (session.sendAndWait) {
-      const result = await session.sendAndWait({ prompt }, 300_000);
+      const result = await session.sendAndWait({ prompt }, 600_000);
       session.off('message_delta', deltaHandler);
 
       if (receivedContent) {
@@ -164,7 +164,7 @@ async function sendAndStream(
         };
         session.on('idle', check);
         session.on('turn_end', check);
-        setTimeout(resolve, 300_000);
+        setTimeout(resolve, 600_000);
       });
 
       session.off('message_delta', deltaHandler);

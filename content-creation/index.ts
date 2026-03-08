@@ -12,6 +12,10 @@ import { SquadClient } from '@bradygaster/squad-sdk/client';
 import type { SquadSession, SquadSessionConfig } from '@bradygaster/squad-sdk/adapter';
 import type { SquadSessionEvent, SquadSessionEventHandler } from '@bradygaster/squad-sdk/adapter';
 import squadConfig from './squad.config.js';
+import { initSquadTelemetry } from '@bradygaster/squad-sdk';
+
+// Initialize OpenTelemetry (sends traces/metrics to Aspire when OTEL_EXPORTER_OTLP_ENDPOINT is set)
+const telemetry = initSquadTelemetry();
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ANSI helpers
@@ -171,7 +175,7 @@ async function sendAndStream(
 
   try {
     if (session.sendAndWait) {
-      const result = await session.sendAndWait({ prompt }, 300_000);
+      const result = await session.sendAndWait({ prompt }, 600_000);
       session.off('message_delta', deltaHandler);
 
       if (receivedContent) {
@@ -197,7 +201,7 @@ async function sendAndStream(
         };
         session.on('idle', check);
         session.on('turn_end', check);
-        setTimeout(resolve, 300_000);
+        setTimeout(resolve, 600_000);
       });
 
       session.off('message_delta', deltaHandler);
@@ -338,6 +342,8 @@ async function main(): Promise<void> {
   console.log(`${C.white}  Great content isn't written — it's engineered.${C.reset}`);
   console.log(`${C.white}  See the README for ideas, or just start hacking!${C.reset}`);
   console.log();
+
+  await telemetry.shutdown();
 
   try {
     await session.close();
