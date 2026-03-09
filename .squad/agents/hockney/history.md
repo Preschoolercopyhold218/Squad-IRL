@@ -832,3 +832,15 @@ All labeled squad:hockney for routing. Each issue includes: what's missing, why 
 - **Pattern followed:** gmail/ gold standard — SquadClient from squad-sdk/client, streaming with ANSI output, banner, sendAndWait with delta handler, closing inspiration section, buildSystemPrompt from squad config.
 - **Verification:** `npm install` clean (0 vulnerabilities), `npx tsc --noEmit` passes with zero errors.
 - **Key difference from gmail:** File-based integration (reads .txt/.md from folder) instead of Playwright browser automation. No interactive readline — reads tickets and triages in one shot.
+
+### Mood playlist dynamic-regression coverage (2026-03-09)
+- Expanded mood-playlist-builder/tests/mood-logic.test.ts from 3 to 9 tests, covering model-proposal normalization, malformed/empty fallback behavior, persistence append contracts, YouTube ID extraction/playlist URL composition, and deterministic archive-informed mood selection.
+- Added test-driven helpers in mood-playlist-builder/mood-logic.ts: `normalizeMoodPhraseFromModel`, `normalizeSongsFromModel`, `resolvePlaylistFromModel`, and `chooseArchiveInformedMoodPhrase` to harden dynamic SDK-style response handling.
+- Verified quality gate with `npm run typecheck && npm test` in mood-playlist-builder (9/9 passing).
+
+
+### 📌 Team update (2026-03-09T01:13:18Z): Deterministic Regression Tests for Dynamic Mood Playlist — decided by Hockney
+- Expanded mood-playlist-builder test suite with dynamic model output validation
+- Added deterministic tests for fallback behavior, archive-informed tie-breaking, markdown append contracts
+- Protected YouTube ID extraction and watch_videos URL composition guarantees
+- All tests passing

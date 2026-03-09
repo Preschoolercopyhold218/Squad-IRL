@@ -3411,3 +3411,116 @@ Each file has two timeout occurrences that were updated:
 **By:** Fenster
 **What:** sendAndStream accumulates streamed content in a buffer and returns it. Caller writes buffer to iles/{sanitized_area}_CMA_Package.md after streaming completes.
 **Why:** Post-stream write is atomic, avoids filesystem thrashing, consistent with error handling. Pattern is reusable for any streamed output persistence.
+
+
+---
+
+# Fenster Decision — Dynamic Mood Playlist Guardrails
+
+## Context
+Mood Playlist Builder needed prime-time demo behavior using model-driven generation without breaking existing markdown persistence contracts.
+
+## Decision
+Use Squad SDK model output for mood phrase + adjacent moods + songs, but require strict JSON schema validation (required fields, array bounds, max 15 songs). If output is invalid or model runtime is unavailable, immediately use deterministic local fallback and print an explicit warning.
+
+## Why
+This preserves reliability for live demos while still showcasing dynamic generation. The fallback keeps the UX and persistence contracts stable and avoids silent degradation.
+
+## Impact
+- Dynamic path is now default behavior.
+- Deterministic fallback preserves predictable output for edge cases.
+- Archive history is actively reused for context and adjacent mood hints.
+
+
+---
+
+# Decision: Increase Sample Timeout from 5min to 10min
+
+**Date:** 2026-03-09  
+**Author:** Fenster  
+**Status:** Implemented  
+
+## Context
+
+Brady hit a timeout error running the content-creation sample. The hardcoded 5-minute timeout (300_000ms) wasn't sufficient for multi-agent LLM workflows, especially complex pipelines like content-creation which chains 4 agents sequentially (Researcher → Outliner → Writer → Editor).
+
+## Decision
+
+Increased the timeout from 300_000ms (5 minutes) to 600_000ms (10 minutes) across all 19 sample applications.
+
+## Changes
+
+Updated all 19 sample `index.ts` files:
+- ab-test-orchestrator
+- appointment-scheduler
+- bug-triage
+- compliance-checker
+- content-creation
+- contract-reviewer
+- gmail
+- inventory-manager
+- job-application-tracker
+- linkedin-monitor
+- meeting-recap
+- mtg-commander-deck-builder
+- price-monitor
+- real-estate-analyzer
+- realtor-sales-package
+- receipt-scanner
+- social-media-manager
+- support-ticket-router
+- travel-planner
+
+Each file has two timeout occurrences that were updated:
+1. `session.sendAndWait({ prompt }, 300_000)` → `600_000`
+2. `setTimeout(resolve, 300_000)` → `600_000` (fallback path)
+
+## Rationale
+
+- Multi-agent workflows with sequential coordination naturally take longer than single-agent interactions
+- Complex content creation pipelines (research, outline, write, edit) can easily exceed 5 minutes
+- Doubling the timeout to 10 minutes provides comfortable headroom while still catching genuinely stuck sessions
+- Consistent timeout across all samples prevents similar issues in other multi-agent workflows
+
+## Alternatives Considered
+
+- **Make timeout configurable per-sample:** Rejected as premature optimization. 10 minutes works for all samples.
+- **Increase only content-creation:** Rejected. Other samples have similar multi-agent patterns and could hit the same issue.
+
+## Impact
+
+- Users running complex multi-agent samples will no longer encounter premature timeout errors
+- No breaking changes — this is a pure timeout increase
+- All samples continue to work exactly as before, just with more patience
+
+
+---
+
+# Decision: Add deterministic regression tests for dynamic mood playlist model output
+
+**Date:** 2026-03-08T21:08:33-04:00  
+**Author:** Hockney  
+**Status:** Implemented
+
+## Context
+The mood-playlist-builder sample had baseline deterministic tests but no explicit protection for dynamic model-proposed playlist payloads. That left validation, fallback behavior, and archive-informed selection logic under-specified for future Squad SDK-driven generation.
+
+## Decision
+Add explicit normalization/resolution helpers and regression tests that treat model output as untrusted input:
+- normalize and cap model-proposed mood phrases and song lists (required fields, max 15 songs)
+- fallback deterministically when model payload is malformed or empty
+- keep existing markdown append contracts and naming conventions covered
+- retain YouTube ID extraction and watch_videos URL composition guarantees
+- lock archive-informed tie-breaking behavior with deterministic tests
+
+## Impact
+Future dynamic SDK integration can reuse these hardened helpers without regressing current persistence/output contracts. The sample now has stronger test coverage around the exact failure modes expected from real model responses.
+
+
+---
+
+### 2026-03-08T16:57:41Z: User directive
+**By:** Brady (via Copilot)
+**What:** Rename the project from "100 Ways to Use Squad" to "Squad IRL" everywhere it's referenced. Folder rename will be done manually later.
+**Why:** User request — captured for team memory
+

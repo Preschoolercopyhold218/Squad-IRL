@@ -939,3 +939,17 @@ pm start works.
 - Decision captured: fenster-mood-playlist-deterministic-flow.md (deterministic core, user confirmation loop, append-only logs)
 - Files: index.ts (CLI), mood-logic.ts (logic module), tests/mood-logic.test.ts (unit tests), README.md
 - Quality: all tests passing, deterministic behavior verified, markdown persistence tested, sample runs end-to-end
+
+## 2026-03-09: Mood Playlist Builder Dynamic SDK Flow
+
+- Upgraded mood-playlist-builder from static-only generation to Squad SDK-driven mood planning with strict JSON schema constraints.
+- Added deterministic fallback path when model output is missing/invalid/unavailable; fallback now emits explicit warning text (no silent failure path).
+- Reused `mood-archive.md` as planning context (recent/popular/adjacent suggestions) and surfaced adjacent moods in UX while preserving append-only markdown contracts.
+- Preserved existing playlist editing loop (done/remove/add/reset), YouTube URL resolution, and daily archive/playlist append format.
+
+
+### 📌 Team update (2026-03-09T01:13:18Z): Dynamic Mood Playlist Guardrails + all-sample timeout increase (5min→10min) — decided by Fenster
+- Mood playlist sample now uses Squad SDK for dynamic mood/song generation with strict JSON validation
+- Deterministic fallback on validation failure or model unavailability
+- All 19 sample index.ts files updated with 600_000ms timeout
+- Playlist/archive persistence and YouTube launch contract preserved
