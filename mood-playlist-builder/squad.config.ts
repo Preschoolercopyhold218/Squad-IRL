@@ -130,18 +130,21 @@ export const moodPipeline = [
     agent: '@mood-interpreter',
     objective: 'Summarize raw mood input into a stable mood phrase and adjacent moods.',
     outputSchema: '{ "moodPhrase": "string", "adjacentMoods": ["string"] }',
+    dependsOn: [],
   },
   {
     id: 'curate-songs',
     agent: '@song-curator',
     objective: 'Curate 1-8 mood-matching songs with genre, artist, and song.',
     outputSchema: '{ "songs": [{ "genre": "string", "artist": "string", "song": "string" }] }',
+    dependsOn: [],
   },
   {
     id: 'apply-mood-logic',
     agent: '@mood-logic-guardian',
     objective: 'Produce final playlist output with history-aware and fallback-safe policy.',
     outputSchema: '{ "moodPhrase": "string", "adjacentMoods": ["string"], "songs": [...] }',
+    dependsOn: ['interpret-mood', 'curate-songs'],
   },
 ] as const;
 

@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import squadConfig from '../squad.config.js';
-import { assertMoodOrchestrationConfig, buildMoodPlannerSystemPrompt } from '../squad-orchestration.js';
+import { moodPipeline } from '../squad.config.js';
+import {
+  assertMoodOrchestrationConfig,
+  buildMoodPipelineExecutionBatches,
+  buildMoodPlannerSystemPrompt,
+} from '../squad-orchestration.js';
 
 test('mood-playlist orchestration requires all squad.config.ts responsibility agents', () => {
   assert.doesNotThrow(() => assertMoodOrchestrationConfig());
@@ -43,4 +48,30 @@ test('system prompt is assembled from squad.config.ts roles and charters', () =>
 
   const overriddenPrompt = buildMoodPlannerSystemPrompt(overridden as typeof squadConfig);
   assert.equal(overriddenPrompt.includes('OVERRIDE_CHARTER_TOKEN'), true);
+});
+
+test('pipeline dependency batching preserves config-driven orchestration and parallel stages', () => {
+  const batches = buildMoodPipelineExecutionBatches(moodPipeline);
+  const stageIdsByBatch = batches.map((batch) => batch.map((stage) => stage.id));
+
+  assert.deepEqual(stageIdsByBatch, [
+    ['interpret-mood', 'curate-songs'],
+    ['apply-mood-logic'],
+  ]);
+
+  const invalidPipeline = [
+    ...moodPipeline,
+    {
+      id: 'invalid-stage',
+      agent: '@mood-interpreter',
+      objective: 'invalid',
+      outputSchema: '{}',
+      dependsOn: ['missing-stage'],
+    },
+  ] as unknown as typeof moodPipeline;
+
+  assert.throws(
+    () => buildMoodPipelineExecutionBatches(invalidPipeline),
+    /depends on unknown stage "missing-stage"/,
+  );
 });

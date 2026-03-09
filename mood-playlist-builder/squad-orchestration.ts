@@ -2,6 +2,7 @@ import squadConfig, { moodPipeline, REQUIRED_MOOD_AGENT_NAMES } from './squad.co
 
 type SquadLike = typeof squadConfig;
 type PipelineStage = (typeof moodPipeline)[number];
+type PipelineStageId = PipelineStage['id'];
 
 function requireMoodAgent(config: SquadLike, name: string): { name: string; role: string; charter: string } {
   const found = (config.agents ?? []).find((agent) => agent.name === name);
@@ -22,6 +23,42 @@ export function assertMoodOrchestrationConfig(config: SquadLike = squadConfig): 
   for (const required of REQUIRED_MOOD_AGENT_NAMES) {
     requireMoodAgent(config, required);
   }
+}
+
+export function buildMoodPipelineExecutionBatches(pipeline: readonly PipelineStage[] = moodPipeline): PipelineStage[][] {
+  const stageIds = new Set<PipelineStageId>(pipeline.map((stage) => stage.id));
+  for (const stage of pipeline) {
+    for (const dependency of stage.dependsOn ?? []) {
+      if (!stageIds.has(dependency as PipelineStageId)) {
+        throw new Error(`Stage "${stage.id}" depends on unknown stage "${dependency}".`);
+      }
+    }
+  }
+
+  const resolved = new Set<PipelineStageId>();
+  const pending = new Set<PipelineStageId>(pipeline.map((stage) => stage.id));
+  const batches: PipelineStage[][] = [];
+
+  while (pending.size > 0) {
+    const ready = pipeline.filter((stage) => {
+      if (!pending.has(stage.id)) return false;
+      const dependencies = stage.dependsOn ?? [];
+      return dependencies.every((dependency) => resolved.has(dependency as PipelineStageId));
+    });
+
+    if (ready.length === 0) {
+      const blocked = [...pending].join(', ');
+      throw new Error(`Mood pipeline dependencies are cyclic or unsatisfied: ${blocked}.`);
+    }
+
+    batches.push(ready);
+    for (const stage of ready) {
+      pending.delete(stage.id);
+      resolved.add(stage.id);
+    }
+  }
+
+  return batches;
 }
 
 export function buildMoodPlannerSystemPrompt(config: SquadLike = squadConfig): string {

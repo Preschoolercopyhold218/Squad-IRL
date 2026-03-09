@@ -7,7 +7,12 @@ Create a playlist based on how you feel, refine the songs interactively, save ev
 ### Creating a New Playlist
 1. Prompts for your raw mood text.
 2. Uses Squad SDK + model output to generate a 1–3 word mood phrase, adjacent mood options, and up to 8 songs.
+   - Shows live pipeline progress while you wait:
+     - `interpret mood`
+     - `curate songs`
+     - `apply mood logic`
 3. Validates model output with strict schema guardrails; if invalid/unavailable, falls back to deterministic local logic.
+   - Prints completion/fallback status so you can tell when deterministic logic was used.
 4. Lets you confirm/edit the list with interactive commands:
    - `done` — accept current song list and move on
    - `remove 2,5,8` — remove songs by index number

@@ -2,10 +2,16 @@ import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { join, resolve } from 'node:path';
 import { spawn } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { SquadClient } from '@bradygaster/squad-sdk/client';
-import type { SquadSession, SquadSessionConfig } from '@bradygaster/squad-sdk/adapter';
+import type { SquadSessionConfig } from '@bradygaster/squad-sdk/adapter';
 import { moodPipeline } from './squad.config.js';
-import { buildMoodPlannerSystemPrompt, buildStagePrompt, mergeMoodPipelineOutputs } from './squad-orchestration.js';
+import {
+  buildMoodPipelineExecutionBatches,
+  buildMoodPlannerSystemPrompt,
+  buildStagePrompt,
+  mergeMoodPipelineOutputs,
+} from './squad-orchestration.js';
 import {
   appendMarkdownRow,
   buildArchiveMoodSuggestions,
@@ -84,7 +90,32 @@ function extractContent(result: unknown): string | null {
   return null;
 }
 
-async function generateDynamicPlaylist(rawMood: string, archiveEntries: ReturnType<typeof readMoodArchive>): Promise<{
+function getStageProgressLabel(stageId: string): { activity: string; completion: string } {
+  switch (stageId) {
+    case 'interpret-mood':
+      return {
+        activity: 'Interpreting mood',
+        completion: 'Mood interpretation complete',
+      };
+    case 'curate-songs':
+      return {
+        activity: 'Curating songs',
+        completion: 'Song curation complete',
+      };
+    case 'apply-mood-logic':
+      return {
+        activity: 'Applying mood logic',
+        completion: 'Mood logic checks complete',
+      };
+    default:
+      return {
+        activity: `Running ${stageId}`,
+        completion: `${stageId} complete`,
+      };
+  }
+}
+
+export async function generateDynamicPlaylist(rawMood: string, archiveEntries: ReturnType<typeof readMoodArchive>): Promise<{
   moodPhrase: string;
   adjacentMoods: string[];
   songs: SongSuggestion[];
@@ -112,15 +143,19 @@ async function generateDynamicPlaylist(rawMood: string, archiveEntries: ReturnTy
   };
 
   let client: SquadClient | null = null;
-  let session: SquadSession | null = null;
   const stageOutputs: Record<string, unknown> = {};
 
   try {
+    console.log();
+    console.log(`${C.magenta}${C.bold}  Squad is building your playlist...${C.reset}`);
+    console.log(`${C.dim}  Stages: interpret mood → curate songs → apply mood logic${C.reset}`);
+
     client = new SquadClient({
       cwd: process.cwd(),
       autoReconnect: true,
     });
     await client.connect();
+    const connectedClient = client;
 
     const sessionConfig: SquadSessionConfig = {
       model: 'claude-sonnet-4.5',
@@ -132,25 +167,53 @@ async function generateDynamicPlaylist(rawMood: string, archiveEntries: ReturnTy
       onPermissionRequest: () => ({ kind: 'approved' as const }),
     };
 
-    session = await client.createSession(sessionConfig);
-    for (const stage of moodPipeline) {
+    const executionBatches = buildMoodPipelineExecutionBatches(moodPipeline);
+    let completedStages = 0;
+
+    const runStage = async (stage: (typeof moodPipeline)[number]): Promise<unknown> => {
       const stagePrompt = buildStagePrompt(stage, contextPayload, stageOutputs);
-      const result = session.sendAndWait
-        ? await session.sendAndWait({ prompt: stagePrompt }, 600_000)
-        : await client.sendMessage(session, { prompt: stagePrompt });
-      stageOutputs[stage.id] = extractContent(result) ?? result;
+      const stageSession = await connectedClient.createSession(sessionConfig);
+      try {
+        const result = stageSession.sendAndWait
+          ? await stageSession.sendAndWait({ prompt: stagePrompt }, 600_000)
+          : await connectedClient.sendMessage(stageSession, { prompt: stagePrompt });
+        return extractContent(result) ?? result;
+      } finally {
+        try {
+          await stageSession.close();
+        } catch {}
+      }
+    };
+
+    for (const batch of executionBatches) {
+      for (const stage of batch) {
+        const stageLabel = getStageProgressLabel(stage.id);
+        const stageNumber = moodPipeline.findIndex((candidate) => candidate.id === stage.id) + 1;
+        console.log(`${C.cyan}  ${stageNumber}/${moodPipeline.length} ${stageLabel.activity}...${C.reset}`);
+      }
+
+      const batchResults = await Promise.all(batch.map(async (stage) => ({ stage, output: await runStage(stage) })));
+      for (const { stage, output } of batchResults) {
+        stageOutputs[stage.id] = output;
+        completedStages += 1;
+        const stageLabel = getStageProgressLabel(stage.id);
+        console.log(`${C.green}     ✓ ${stageLabel.completion}.${C.reset}`);
+      }
+
+      if (completedStages === moodPipeline.length) {
+        console.log(`${C.green}  ✓ Squad pipeline complete.${C.reset}`);
+      }
     }
   } catch (error: unknown) {
     const resolved = resolvePlaylistFromModel(rawMood, null, archiveEntries, MAX_PLAYLIST_SONGS);
     const reason = error instanceof Error ? error.message : String(error);
+    console.log(`${C.yellow}  Dynamic pipeline unavailable. Falling back to deterministic mood logic...${C.reset}`);
+    console.log(`${C.green}  ✓ Fallback playlist generated.${C.reset}`);
     return {
       ...resolved,
       warning: `Dynamic generation unavailable (${reason}). Using deterministic fallback.`,
     };
   } finally {
-    try {
-      await session?.close();
-    } catch {}
     try {
       await client?.disconnect();
     } catch {}
@@ -158,6 +221,9 @@ async function generateDynamicPlaylist(rawMood: string, archiveEntries: ReturnTy
 
   const modelOutput = mergeMoodPipelineOutputs(stageOutputs);
   const resolved = resolvePlaylistFromModel(rawMood, modelOutput, archiveEntries, MAX_PLAYLIST_SONGS);
+  if (resolved.usedFallback) {
+    console.log(`${C.yellow}  Model output needed deterministic fallback adjustments.${C.reset}`);
+  }
   return {
     ...resolved,
     warning: resolved.usedFallback ? (resolved.failureReason ?? 'Model output invalid. Using deterministic fallback.') : undefined,
@@ -490,8 +556,11 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`${C.red}  Fatal error: ${message}${C.reset}`);
-  process.exit(1);
-});
+const entrypoint = process.argv[1] ? pathToFileURL(process.argv[1]).href : null;
+if (entrypoint && import.meta.url === entrypoint) {
+  main().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`${C.red}  Fatal error: ${message}${C.reset}`);
+    process.exit(1);
+  });
+}
