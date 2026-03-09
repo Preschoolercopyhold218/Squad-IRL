@@ -844,3 +844,16 @@ All labeled squad:hockney for routing. Each issue includes: what's missing, why 
 - Added deterministic tests for fallback behavior, archive-informed tie-breaking, markdown append contracts
 - Protected YouTube ID extraction and watch_videos URL composition guarantees
 - All tests passing
+
+### Mood squad.config enforcement tests (2026-03-09)
+- Added explicit squad-orchestration coverage in `mood-playlist-builder/tests/squad-config.test.ts` to enforce non-bypassable responsibilities from `squad.config.ts`.
+- New assertions fail fast when required agents are missing (`mood-interpreter`, `song-curator`, `mood-logic-guardian`) and verify system prompt assembly pulls role charters from config (including override sensitivity).
+- Wired runtime prompt generation in `mood-playlist-builder/index.ts` to `buildMoodPlannerSystemPrompt()` from `squad-orchestration.ts` so mood/music/mood-logic orchestration is config-driven.
+- Regression safety confirmed: dynamic response handling, archive-informed behavior, persistence append contracts, and YouTube playlist composition still pass (`npm run typecheck && npm test`, 12/12 passing).
+
+### 📌 Team update (2026-03-09T01:22:06Z): mood-playlist-builder orchestration hardened via squad.config.ts — decided by Fenster, Hockney
+- Explicit role-based orchestration in mood-playlist-builder/squad.config.ts via moodPipeline
+- Runtime bound to config through squad-orchestration.ts helpers
+- Enforcement tests prevent silent bypasses; all 12 tests passing
+- Persistence and YouTube playback contracts preserved
+

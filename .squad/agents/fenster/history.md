@@ -953,3 +953,22 @@ pm start works.
 - Deterministic fallback on validation failure or model unavailability
 - All 19 sample index.ts files updated with 600_000ms timeout
 - Playlist/archive persistence and YouTube launch contract preserved
+
+## 2026-03-09: Explicit mood Squad config as orchestration source
+
+- Centered mood pipeline orchestration in `mood-playlist-builder/squad.config.ts` with explicit stage ownership:
+  - `mood-interpreter` (mood interpretation/summarization)
+  - `song-curator` (song matching/curation)
+  - `mood-logic-guardian` (history-aware mood logic + fallback policy)
+- Added `moodPipeline` and `REQUIRED_MOOD_AGENT_NAMES` to make stage routing and required roles deterministic from config.
+- Updated runtime orchestration to execute staged prompts from `moodPipeline` via `squad-orchestration.ts` (`buildStagePrompt` + `mergeMoodPipelineOutputs`) instead of implicit single-pass routing.
+- Preserved existing contracts: daily playlist markdown path format, `mood-archive.md` append behavior, YouTube `watch_videos` launch flow, and explicit no-silent-failure fallback warnings.
+- Updated README to document where orchestration is configured and how to modify it.
+- Verified with `npm run typecheck` and `npm test` in `mood-playlist-builder` (all passing).
+
+### 📌 Team update (2026-03-09T01:22:06Z): mood-playlist-builder orchestration hardened via squad.config.ts — decided by Fenster, Hockney
+- Explicit role-based orchestration in mood-playlist-builder/squad.config.ts via moodPipeline
+- Runtime bound to config through squad-orchestration.ts helpers
+- Enforcement tests prevent silent bypasses; all 12 tests passing
+- Persistence and YouTube playback contracts preserved
+

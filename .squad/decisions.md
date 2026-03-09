@@ -3524,3 +3524,61 @@ Future dynamic SDK integration can reuse these hardened helpers without regressi
 **What:** Rename the project from "100 Ways to Use Squad" to "Squad IRL" everywhere it's referenced. Folder rename will be done manually later.
 **Why:** User request — captured for team memory
 
+
+---
+
+# Decision: mood-playlist-builder orchestration lives in squad.config.ts
+
+## Context
+The mood playlist sample needed explicit, role-based Squad orchestration so mood interpretation, song curation, and mood-logic policy are visible and configurable in one place.
+
+## Decision
+- Define the mood squad responsibilities and stage order in `mood-playlist-builder/squad.config.ts` via `moodPipeline`.
+- Keep runtime orchestration (`index.ts`) stage execution bound to `moodPipeline` through `squad-orchestration.ts` helpers.
+- Preserve existing persistence/playback contracts and deterministic fallback behavior.
+
+## Impact
+- No hidden role routing in runtime; role assignment now follows `squad.config.ts`.
+- Future role or stage changes are made in config first, then reflected automatically by orchestration.
+
+
+---
+
+# Decision: Enforce mood-playlist orchestration through squad.config.ts
+
+**Date:** 2026-03-09  
+**Author:** Hockney  
+**Status:** Implemented
+
+## Context
+The mood-playlist sample needed explicit guarantees that mood interpretation, music curation, and mood-logic safety are orchestrated via `squad.config.ts` rather than hardcoded prompt text in runtime code.
+
+## Decision
+- Route dynamic prompt construction through `buildMoodPlannerSystemPrompt()` in `squad-orchestration.ts`, sourced from `squad.config.ts`.
+- Add enforcement tests that fail if required responsibility agents are missing or if prompt content stops reflecting config-defined charters.
+- Keep existing regression contracts (dynamic fallback behavior, archive-informed suggestions, append-only persistence) as mandatory passing checks.
+
+## Impact
+Future refactors cannot silently bypass squad role responsibilities. If config roles drift or are removed, tests fail immediately and block regressions.
+
+
+---
+
+### 2026-03-09T01:22:06Z: mood-playlist-builder orchestration via squad.config.ts (consolidated)
+
+**By:** Fenster, Hockney
+
+**What:**
+- Define mood squad responsibilities and stage order in mood-playlist-builder/squad.config.ts via moodPipeline
+- Route runtime orchestration binding through squad-orchestration.ts helpers (keep implementation and testing orchestration explicit)
+- Implement enforcement tests that fail if required responsibility agents are missing from config
+- Add tests to verify prompt content reflects config-defined charters
+- Preserve existing persistence/playback contracts and deterministic fallback behavior
+
+**Why:**
+- No hidden role routing; role assignment follows source-of-truth config
+- Future role or stage changes made in config first, reflected automatically by orchestration
+- Enforcement tests prevent silent regressions; impossible to bypass config-driven orchestration
+- Tests block immediate if config roles drift or are removed
+
+**Status:** Implemented — all tests passing (12/12), typecheck passing
