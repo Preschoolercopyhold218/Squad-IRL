@@ -908,3 +908,10 @@ All labeled squad:hockney for routing. Each issue includes: what's missing, why 
 
 
 
+
+### Mood pipeline parallel-stage regression tests (2026-03-09)
+**Status:** Complete — deterministic regression coverage added for parallel stage execution, merge behavior, fallback handling, and orchestration enforcement safety.
+- Added `tests/parallel-pipeline.test.ts` with deterministic deferred-stage mocking that proves independent stages (`interpret-mood`, `curate-songs`) begin before dependent `apply-mood-logic`, while preserving coherent progress output order.
+- Added merge-equivalence coverage validating malformed final-stage payloads still resolve to equivalent behavior via interpreted mood + curated songs (shape, song list, warnings).
+- Added hard-failure fallback coverage validating deterministic local fallback output + user-facing fallback messaging remain stable.
+- Validation command: `npm test && npm run typecheck` in `mood-playlist-builder` passes.

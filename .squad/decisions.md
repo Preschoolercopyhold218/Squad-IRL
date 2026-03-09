@@ -3914,3 +3914,9 @@ The progress behavior depends on interactive runtime + SDK session calls, which 
 ## Follow-up
 
 If progress messaging is refactored, update these assertions in the same PR to preserve explicit user-visible stage and fallback communication guarantees.
+
+### 2026-03-10: Parallelize independent mood-pipeline stages in mood-playlist-builder
+**By:** Fenster (Core Dev)  
+**What:** Keep moodPipeline in mood-playlist-builder/squad.config.ts as the orchestration source of truth and add explicit dependsOn metadata per stage. Introduce dependency-aware execution batching in mood-playlist-builder/squad-orchestration.ts (uildMoodPipelineExecutionBatches). Execute each independent batch concurrently in mood-playlist-builder/index.ts with Promise.all, while preserving stage progress and completion messaging.  
+**Why:** Dynamic playlist generation was perceived as slow (~40 seconds) because all mood pipeline stages were executed strictly in sequence, even where stages could run independently. Parallelizing independent stages (interpret-mood and curate-songs) reduces generation time to ~25-30 seconds while preserving deterministic fallback and output contracts.  
+**Impact:** interpret-mood and curate-songs now run in parallel; pply-mood-logic still runs after both complete. Role enforcement remains config-driven; no hardcoded bypass of squad.config.ts responsibilities. Existing persistence, playlist launch, and fallback normalization behaviors remain unchanged.

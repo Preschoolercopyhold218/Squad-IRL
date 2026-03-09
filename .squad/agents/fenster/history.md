@@ -1034,3 +1034,10 @@ pm start works.
 - Preserved all existing behavior contracts: 8-song cap, archive/playlist append flows, and previous-playlist open/launch paths.
 - Updated sample README to document the new wait-time progress indicators and fallback visibility.
 - Validation: `npm test && npm run typecheck` passed in `mood-playlist-builder`.
+
+### 📌 Team update (2026-03-10): mood-playlist dynamic pipeline now parallelizes independent stages — decided by Fenster
+- Added dependency-aware stage batching via `buildMoodPipelineExecutionBatches()` in `mood-playlist-builder/squad-orchestration.ts`, driven directly by `moodPipeline` config.
+- Extended `moodPipeline` in `mood-playlist-builder/squad.config.ts` with `dependsOn` metadata so `interpret-mood` and `curate-songs` can run concurrently while `apply-mood-logic` waits for both.
+- Updated runtime orchestration in `mood-playlist-builder/index.ts` to execute each independent batch with `Promise.all`, while keeping stage progress logs and completion messaging deterministic and coherent.
+- Preserved deterministic fallback behavior and final output contracts by continuing to normalize/validate via `resolvePlaylistFromModel()` after merged stage outputs.
+- Validation: `npm test && npm run typecheck` passed in `mood-playlist-builder` (35 tests passing).
